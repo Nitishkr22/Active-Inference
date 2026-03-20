@@ -1,0 +1,27 @@
+import torch
+
+checkpoint = torch.load('checkpoints/best_gru_world_model.pt', map_location='cpu')
+
+# Check what is inside the file
+if isinstance(checkpoint, dict):
+    print("Keys found in .pt file:", checkpoint.keys())
+else:
+    print("The file only contains a model/tensor, not a dictionary of results.")
+
+import matplotlib.pyplot as plt
+
+# Extract the lists (ensure these keys match what you found in Step 1)
+train_losses = checkpoint.get('train_loss', [])
+val_losses = checkpoint.get('val_loss', [])
+
+if train_losses and val_losses:
+    plt.figure(figsize=(10, 5))
+    plt.plot(train_losses, label='Training Loss')
+    plt.plot(val_losses, label='Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.title('Training vs Validation Loss')
+    plt.show()
+else:
+    print("Loss data not found in this .pt file.")
