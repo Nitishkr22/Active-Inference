@@ -11,7 +11,7 @@ from gru_world_model import GRUWorldModel
 
 def train_gru_world_model(
     dataset_path="../../dataset/tiny_nav_sequence_dataset.npz",
-    batch_size=32,
+    batch_size=128,
     lr=3e-4,
     epochs=30,
     save_dir="checkpoints",
@@ -28,8 +28,8 @@ def train_gru_world_model(
     n_val = n_total - n_train
     train_ds, val_ds = random_split(dataset, [n_train, n_val])
 
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,num_workers=4, pin_memory=True,persistent_workers=True)
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False,num_workers=4, pin_memory=True,persistent_workers=True)
 
     model = GRUWorldModel().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)

@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader, random_split
 
 from sequence_dataset import SequenceDataset
 from gru_world_model import GRUWorldModel
-from train_hidden_transition_multistep_pose import HiddenTransitionModel_multistep_pose
+from train_hidden_transition_multistep_pose import HiddenTransitionModelMultiStepPose
 
 
 def decode_pose_from_hidden(wm, h):
@@ -42,10 +42,10 @@ def decode_pose_from_hidden(wm, h):
 
 
 def evaluate_rollout_horizon(
-    dataset_path="tiny_nav_sequence_dataset.npz",
+    dataset_path="../../dataset/tiny_nav_sequence_dataset.npz",
     gru_ckpt_path="checkpoints/best_gru_world_model.pt",
     transition_ckpt_path="checkpoints/best_hidden_transition_multistep_pose.pt",
-    batch_size=64,
+    batch_size=128,
     max_horizon=15,
     split="val",
 ):
@@ -103,7 +103,7 @@ def evaluate_rollout_horizon(
     # -----------------------------
     # Load trained hidden transition model
     # -----------------------------
-    transition_model = HiddenTransitionModel_multistep_pose(hidden_dim=wm.hidden_dim).to(device)
+    transition_model = HiddenTransitionModelMultiStepPose(hidden_dim=wm.hidden_dim).to(device)
     trans_ckpt = torch.load(transition_ckpt_path, map_location=device)
     transition_model.load_state_dict(trans_ckpt["model_state_dict"])
     transition_model.eval()
@@ -225,10 +225,10 @@ def evaluate_rollout_horizon(
 
 if __name__ == "__main__":
     evaluate_rollout_horizon(
-        dataset_path="tiny_nav_sequence_dataset.npz",
+        dataset_path="../../dataset/tiny_nav_sequence_dataset.npz",
         gru_ckpt_path="checkpoints/best_gru_world_model.pt",
         transition_ckpt_path="checkpoints/best_hidden_transition_multistep_pose.pt",
-        batch_size=64,
+        batch_size=128,
         max_horizon=15,
         split="val",
     )

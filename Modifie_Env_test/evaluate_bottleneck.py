@@ -1,4 +1,4 @@
-# evaluate_teacher_forced_vs_free_rollout.py
+# evaluate_bottleneck_teacher_forced_vs_free_rollout.py
 
 import torch
 import torch.nn as nn
@@ -10,102 +10,84 @@ from gru_world_model import GRUWorldModel
 
 
 # ==========================================================
-# Transition model classes
+# Bottleneck latent modules
 # ==========================================================
 
-class HiddenTransitionModelMultiStepPose(nn.Module):
+class HiddenToLatentEncoder(nn.Module):
     """
-    Plain MLP transition:
-        h_next = f(h, action)
+    Encode frozen GRU hidden state h into smaller latent z.
     """
-    def __init__(self, hidden_dim=128, num_actions=4, action_emb_dim=16):
+    def __init__(self, hidden_dim=128, latent_dim=32):
         super().__init__()
-        self.hidden_dim = hidden_dim
-        self.num_actions = num_actions
-        self.action_emb_dim = action_emb_dim
+        self.net = nn.Sequential(
+            nn.Linear(hidden_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, latent_dim),
+        )
 
+    def forward(self, h):
+        """
+        h : [B, H]
+        z : [B, Z]
+        """
+        return self.net(h)
+
+
+class LatentTransitionModel(nn.Module):
+    """
+    Transition in bottleneck latent space:
+        z_next = f(z, action)
+    """
+    def __init__(self, latent_dim=32, num_actions=4, action_emb_dim=16):
+        super().__init__()
         self.action_embed = nn.Embedding(num_actions, action_emb_dim)
         self.net = nn.Sequential(
-            nn.Linear(hidden_dim + action_emb_dim, 256),
+            nn.Linear(latent_dim + action_emb_dim, 128),
             nn.ReLU(),
-            nn.Linear(256, 256),
+            nn.Linear(128, 128),
             nn.ReLU(),
-            nn.Linear(256, hidden_dim),
+            nn.Linear(128, latent_dim),
         )
 
-    def forward(self, h, action):
+    def forward(self, z, action):
         """
-        h      : [B, H]
+        z      : [B, Z]
         action : [B]
         """
         a_emb = self.action_embed(action)          # [B, action_emb_dim]
-        x = torch.cat([h, a_emb], dim=-1)          # [B, H + action_emb_dim]
-        h_next = self.net(x)                       # [B, H]
-        return h_next
+        x = torch.cat([z, a_emb], dim=-1)          # [B, Z + action_emb_dim]
+        z_next = self.net(x)                       # [B, Z]
+        return z_next
 
 
-class ResidualHiddenTransitionModelMultiStepPose(nn.Module):
+class LatentPoseHead(nn.Module):
     """
-    Residual transition:
-        h_next = h + delta(h, action)
+    Decode pose directly from bottleneck latent z.
     """
-    def __init__(self, hidden_dim=128, num_actions=4, action_emb_dim=16):
+    def __init__(self, latent_dim=32, num_rows=10, num_cols=10, num_headings=4):
         super().__init__()
-        self.hidden_dim = hidden_dim
-        self.num_actions = num_actions
-        self.action_emb_dim = action_emb_dim
-
-        self.action_embed = nn.Embedding(num_actions, action_emb_dim)
-        self.delta_net = nn.Sequential(
-            nn.Linear(hidden_dim + action_emb_dim, 256),
+        self.shared = nn.Sequential(
+            nn.Linear(latent_dim, 128),
             nn.ReLU(),
-            nn.Linear(256, 256),
-            nn.ReLU(),
-            nn.Linear(256, hidden_dim),
         )
+        self.row_head = nn.Linear(128, num_rows)
+        self.col_head = nn.Linear(128, num_cols)
+        self.heading_head = nn.Linear(128, num_headings)
 
-    def forward(self, h, action):
+    def forward(self, z):
         """
-        h      : [B, H]
-        action : [B]
+        z : [B, Z]
+        returns:
+            row_logits     : [B, num_rows]
+            col_logits     : [B, num_cols]
+            heading_logits : [B, num_headings]
         """
-        a_emb = self.action_embed(action)          # [B, action_emb_dim]
-        x = torch.cat([h, a_emb], dim=-1)          # [B, H + action_emb_dim]
-        delta = self.delta_net(x)                  # [B, H]
-        h_next = h + delta                         # [B, H]
-        return h_next
+        x = self.shared(z)
+        row_logits = self.row_head(x)
+        col_logits = self.col_head(x)
+        heading_logits = self.heading_head(x)
+        return row_logits, col_logits, heading_logits
 
-
-class ScaledResidualHiddenTransitionModelMultiStepPose(nn.Module):
-    def __init__(
-        self,
-        hidden_dim=128,
-        num_actions=4,
-        action_emb_dim=16,
-        alpha_init=0.1,
-        learnable_alpha=False,
-    ):
-        super().__init__()
-        self.action_embed = nn.Embedding(num_actions, action_emb_dim)
-        self.delta_net = nn.Sequential(
-            nn.Linear(hidden_dim + action_emb_dim, 256),
-            nn.ReLU(),
-            nn.Linear(256, 256),
-            nn.ReLU(),
-            nn.Linear(256, hidden_dim),
-        )
-
-        if learnable_alpha:
-            self.alpha = nn.Parameter(torch.tensor(float(alpha_init)))
-        else:
-            self.register_buffer("alpha", torch.tensor(float(alpha_init)))
-
-    def forward(self, h, action):
-        a_emb = self.action_embed(action)
-        x = torch.cat([h, a_emb], dim=-1)
-        delta = self.delta_net(x)
-        h_next = h + self.alpha * delta
-        return h_next
 
 # ==========================================================
 # Metric accumulator helpers
@@ -130,8 +112,8 @@ def make_empty_stats(rollout_len):
 
 def update_stats_for_one_prediction(
     stats_k,
-    h_pred,
-    h_target,
+    z_pred,
+    z_target,
     row_logits,
     col_logits,
     heading_logits,
@@ -142,17 +124,14 @@ def update_stats_for_one_prediction(
     """
     Update stats for one prediction step.
     """
-    B, H = h_pred.shape
+    B, Z = z_pred.shape
 
-    # Sum over all latent dimensions and samples
-    stats_k["latent_mse_sum"] += F.mse_loss(h_pred, h_target, reduction="sum").item()
+    stats_k["latent_mse_sum"] += F.mse_loss(z_pred, z_target, reduction="sum").item()
 
-    # Predicted classes
     row_pred = row_logits.argmax(dim=1)
     col_pred = col_logits.argmax(dim=1)
     heading_pred = heading_logits.argmax(dim=1)
 
-    # Correct masks
     row_ok = (row_pred == row_target)
     col_ok = (col_pred == col_target)
     heading_ok = (heading_pred == heading_target)
@@ -164,7 +143,7 @@ def update_stats_for_one_prediction(
     stats_k["count"] += B
 
 
-def finalize_stats(stats, hidden_dim):
+def finalize_stats(stats, latent_dim):
     """
     Convert raw accumulators to readable metrics.
     """
@@ -174,7 +153,7 @@ def finalize_stats(stats, hidden_dim):
         count = s["count"]
         results.append({
             "horizon": k + 1,
-            "latent_mse": s["latent_mse_sum"] / max(count * hidden_dim, 1),
+            "latent_mse": s["latent_mse_sum"] / max(count * latent_dim, 1),
             "row_acc": s["row_correct"] / max(count, 1),
             "col_acc": s["col_correct"] / max(count, 1),
             "heading_acc": s["heading_correct"] / max(count, 1),
@@ -189,21 +168,22 @@ def finalize_stats(stats, hidden_dim):
 # Core batch evaluation
 # ==========================================================
 
-def evaluate_batch_teacher_forced_vs_free(
+def evaluate_batch_teacher_forced_vs_free_bottleneck(
     h_seq,
     actions,
     pos,
     heading,
+    encoder,
     transition_model,
-    wm,
+    pose_head,
     rollout_len,
     tf_stats,
     fr_stats,
 ):
     """
     Evaluate one batch for:
-      1) teacher-forced rollout
-      2) free rollout
+      1) teacher-forced rollout in z-space
+      2) free rollout in z-space
 
     h_seq   : [B, T, H]
     actions : [B, T-1]
@@ -217,12 +197,13 @@ def evaluate_batch_teacher_forced_vs_free(
         return
 
     for start_t in range(max_start + 1):
-        # Free rollout starts once from the true hidden state
-        h_free = h_seq[:, start_t, :]   # [B, H]
+        # Free rollout starts once from true z at start_t
+        z_free = encoder(h_seq[:, start_t, :])   # [B, Z]
 
         for k in range(rollout_len):
             a_t = actions[:, start_t + k]                  # [B]
-            h_target = h_seq[:, start_t + k + 1, :]       # [B, H]
+
+            z_target = encoder(h_seq[:, start_t + k + 1, :])   # [B, Z]
 
             row_target = pos[:, start_t + k + 1, 0]       # [B]
             col_target = pos[:, start_t + k + 1, 1]       # [B]
@@ -230,17 +211,17 @@ def evaluate_batch_teacher_forced_vs_free(
 
             # --------------------------------------------------
             # 1) Teacher-forced rollout
-            # each step uses TRUE hidden state as input
+            # each step uses TRUE z_t as input
             # --------------------------------------------------
-            h_tf_in = h_seq[:, start_t + k, :]            # [B, H]
-            h_tf_pred = transition_model(h_tf_in, a_t)    # [B, H]
+            z_tf_in = encoder(h_seq[:, start_t + k, :])       # [B, Z]
+            z_tf_pred = transition_model(z_tf_in, a_t)        # [B, Z]
 
-            tf_row_logits, tf_col_logits, tf_heading_logits = wm.pose_head(h_tf_pred)
+            tf_row_logits, tf_col_logits, tf_heading_logits = pose_head(z_tf_pred)
 
             update_stats_for_one_prediction(
                 tf_stats[k],
-                h_tf_pred,
-                h_target,
+                z_tf_pred,
+                z_target,
                 tf_row_logits,
                 tf_col_logits,
                 tf_heading_logits,
@@ -251,16 +232,16 @@ def evaluate_batch_teacher_forced_vs_free(
 
             # --------------------------------------------------
             # 2) Free rollout
-            # first step uses true hidden state, later uses own prediction
+            # first step uses true z_start, later uses own prediction
             # --------------------------------------------------
-            h_free = transition_model(h_free, a_t)        # [B, H]
+            z_free = transition_model(z_free, a_t)            # [B, Z]
 
-            fr_row_logits, fr_col_logits, fr_heading_logits = wm.pose_head(h_free)
+            fr_row_logits, fr_col_logits, fr_heading_logits = pose_head(z_free)
 
             update_stats_for_one_prediction(
                 fr_stats[k],
-                h_free,
-                h_target,
+                z_free,
+                z_target,
                 fr_row_logits,
                 fr_col_logits,
                 fr_heading_logits,
@@ -387,11 +368,11 @@ def print_overall_summary(tf_summary, fr_summary):
 # Main evaluation
 # ==========================================================
 
-def evaluate_teacher_forced_vs_free_rollout(
+def evaluate_bottleneck_teacher_forced_vs_free_rollout(
     dataset_path="../../dataset/tiny_nav_sequence_dataset.npz",
     gru_ckpt_path="checkpoints/best_gru_world_model.pt",
-    transition_ckpt_path="checkpoints/best_hidden_transition_residual_pose_only.pt",
-    batch_size=64,
+    bottleneck_ckpt_path="checkpoints/best_bottleneck_latent_transition.pt",
+    batch_size=128,
     rollout_len=None,
     split="val",
 ):
@@ -418,7 +399,14 @@ def evaluate_teacher_forced_vs_free_rollout(
     else:
         raise ValueError("split must be one of: 'train', 'val', 'all'")
 
-    eval_loader = DataLoader(eval_ds, batch_size=batch_size, shuffle=False)
+    eval_loader = DataLoader(
+        eval_ds,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=4,
+        pin_memory=True,
+        persistent_workers=True,
+    )
 
     print(f"Dataset split: {split}")
     print(f"Number of sequences in evaluation set: {len(eval_ds)}")
@@ -435,44 +423,47 @@ def evaluate_teacher_forced_vs_free_rollout(
         p.requires_grad = False
 
     # --------------------------------------------------
-    # Load transition checkpoint
+    # Load bottleneck checkpoint
     # --------------------------------------------------
-    trans_ckpt = torch.load(transition_ckpt_path, map_location=device)
+    ckpt = torch.load(bottleneck_ckpt_path, map_location=device)
 
-    hidden_dim = trans_ckpt.get("hidden_dim", wm.hidden_dim)
+    hidden_dim = ckpt.get("hidden_dim", wm.hidden_dim)
+    latent_dim = ckpt.get("latent_dim", 32)
 
     if rollout_len is None:
-        rollout_len = trans_ckpt.get("rollout_len", 3)
+        rollout_len = ckpt.get("rollout_len", 3)
 
-    model_type = trans_ckpt.get("model_type", "plain_mlp_transition")
+    model_type = ckpt.get("model_type", "bottleneck_latent_transition")
 
-    # Choose correct model class automatically
-    if model_type in ["residual_mlp_transition", "residual_mlp_transition_scheduled_sampling", "residual_mlp_transition_pose_only"]:
-        transition_model = ResidualHiddenTransitionModelMultiStepPose(
-            hidden_dim=hidden_dim,
-            num_actions=4,
-            action_emb_dim=16,
-        ).to(device)
-    elif model_type == "scaled_residual_mlp_transition":
-        transition_model = ScaledResidualHiddenTransitionModelMultiStepPose(
-            hidden_dim=hidden_dim,
-            num_actions=4,
-            action_emb_dim=16,
-            alpha_init=trans_ckpt.get("alpha_init", 0.1),
-            learnable_alpha=trans_ckpt.get("learnable_alpha", False),
-        ).to(device)
-    else:
-        transition_model = HiddenTransitionModelMultiStepPose(
-            hidden_dim=hidden_dim,
-            num_actions=4,
-            action_emb_dim=16,
-        ).to(device)
+    encoder = HiddenToLatentEncoder(
+        hidden_dim=hidden_dim,
+        latent_dim=latent_dim,
+    ).to(device)
 
-    transition_model.load_state_dict(trans_ckpt["model_state_dict"])
+    transition_model = LatentTransitionModel(
+        latent_dim=latent_dim,
+        num_actions=4,
+        action_emb_dim=16,
+    ).to(device)
+
+    pose_head = LatentPoseHead(
+        latent_dim=latent_dim,
+        num_rows=10,
+        num_cols=10,
+        num_headings=4,
+    ).to(device)
+
+    encoder.load_state_dict(ckpt["encoder_state_dict"])
+    transition_model.load_state_dict(ckpt["transition_model_state_dict"])
+    pose_head.load_state_dict(ckpt["pose_head_state_dict"])
+
+    encoder.eval()
     transition_model.eval()
+    pose_head.eval()
 
-    print(f"Loaded transition model from: {transition_ckpt_path}")
+    print(f"Loaded bottleneck model from: {bottleneck_ckpt_path}")
     print(f"Detected model_type = {model_type}")
+    print(f"Using latent_dim = {latent_dim}")
     print(f"Using rollout_len = {rollout_len}")
 
     # --------------------------------------------------
@@ -494,13 +485,14 @@ def evaluate_teacher_forced_vs_free_rollout(
             out = wm.forward_sequence(obs, actions)
             h_seq = out["hidden_states"]            # [B, T, H]
 
-            evaluate_batch_teacher_forced_vs_free(
+            evaluate_batch_teacher_forced_vs_free_bottleneck(
                 h_seq=h_seq,
                 actions=actions,
                 pos=pos,
                 heading=heading,
+                encoder=encoder,
                 transition_model=transition_model,
-                wm=wm,
+                pose_head=pose_head,
                 rollout_len=rollout_len,
                 tf_stats=tf_stats,
                 fr_stats=fr_stats,
@@ -512,8 +504,8 @@ def evaluate_teacher_forced_vs_free_rollout(
     # --------------------------------------------------
     # Finalize and print
     # --------------------------------------------------
-    tf_results = finalize_stats(tf_stats, hidden_dim)
-    fr_results = finalize_stats(fr_stats, hidden_dim)
+    tf_results = finalize_stats(tf_stats, latent_dim)
+    fr_results = finalize_stats(fr_stats, latent_dim)
 
     print_results_table("TEACHER-FORCED ROLLOUT RESULTS", tf_results)
     print_results_table("FREE ROLLOUT RESULTS", fr_results)
@@ -525,11 +517,11 @@ def evaluate_teacher_forced_vs_free_rollout(
 
 
 if __name__ == "__main__":
-    evaluate_teacher_forced_vs_free_rollout(
+    evaluate_bottleneck_teacher_forced_vs_free_rollout(
         dataset_path="../../dataset/tiny_nav_sequence_dataset.npz",
         gru_ckpt_path="checkpoints/best_gru_world_model.pt",
-        transition_ckpt_path="checkpoints/best_hidden_transition_residual_pose_only.pt",
-        batch_size=64,
+        bottleneck_ckpt_path="checkpoints/best_bottleneck_latent_transition.pt",
+        batch_size=128,
         rollout_len=None,   # None -> read from checkpoint
         split="val",        # "train", "val", or "all"
     )

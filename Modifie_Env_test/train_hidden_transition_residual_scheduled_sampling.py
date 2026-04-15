@@ -5,8 +5,8 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
 
-# from sequence_dataset import SequenceDataset
-# from gru_world_model import GRUWorldModel
+from sequence_dataset import SequenceDataset
+from gru_world_model import GRUWorldModel
 
 
 class ResidualHiddenTransitionModelMultiStepPose(nn.Module):
@@ -208,9 +208,9 @@ def evaluate_pose_rollout_accuracy(
 
 
 def train_hidden_transition_residual_scheduled_sampling(
-    dataset_path="tiny_nav_sequence_dataset.npz",
+    dataset_path="../../dataset/tiny_nav_sequence_dataset.npz",
     gru_ckpt_path="checkpoints/best_gru_world_model.pt",
-    batch_size=32,
+    batch_size=128,
     lr=3e-4,
     epochs=25,
     rollout_len=3,
@@ -243,8 +243,8 @@ def train_hidden_transition_residual_scheduled_sampling(
 
     train_ds, val_ds = random_split(dataset, [n_train, n_val])
 
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True, persistent_workers=True)
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=True, persistent_workers=True)
 
     print(f"Total sequences: {n_total}")
     print(f"Train sequences: {n_train}")
@@ -430,7 +430,7 @@ def train_hidden_transition_residual_scheduled_sampling(
                 },
                 save_path,
             )
-            print(f"  Saved best checkpoint to: {save_path}")
+    print(f"  Saved best checkpoint to: {save_path}")
 
     print("Residual scheduled-sampling transition training finished.")
     print("Best val loss:", best_val_loss)
@@ -438,9 +438,9 @@ def train_hidden_transition_residual_scheduled_sampling(
 
 if __name__ == "__main__":
     train_hidden_transition_residual_scheduled_sampling(
-        dataset_path="tiny_nav_sequence_dataset.npz",
+        dataset_path="../../dataset/tiny_nav_sequence_dataset.npz",
         gru_ckpt_path="checkpoints/best_gru_world_model.pt",
-        batch_size=32,
+        batch_size=128,
         lr=3e-4,
         epochs=25,
         rollout_len=3,

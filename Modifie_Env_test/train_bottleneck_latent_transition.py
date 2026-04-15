@@ -1,4 +1,4 @@
-# train_hidden_transition_residual_pose_only.py
+# train_bottleneck_latent_transition.py
 
 import os
 import torch
@@ -9,94 +9,142 @@ from sequence_dataset import SequenceDataset
 from gru_world_model import GRUWorldModel
 
 
-class ResidualHiddenTransitionModelMultiStepPose(nn.Module):
-    """
-    Residual transition model:
-        h_next = h + delta(h, action)
+# ==========================================================
+# Bottleneck latent modules
+# ==========================================================
 
-    Predicts a hidden-state update from current hidden state and action.
+class HiddenToLatentEncoder(nn.Module):
     """
-    def __init__(self, hidden_dim=128, num_actions=4, action_emb_dim=16):
+    Encode frozen GRU hidden state h into smaller latent z.
+    """
+    def __init__(self, hidden_dim=128, latent_dim=32):
         super().__init__()
-        self.hidden_dim = hidden_dim
-        self.num_actions = num_actions
-        self.action_emb_dim = action_emb_dim
-
-        self.action_embed = nn.Embedding(num_actions, action_emb_dim)
-
-        self.delta_net = nn.Sequential(
-            nn.Linear(hidden_dim + action_emb_dim, 256),
+        self.net = nn.Sequential(
+            nn.Linear(hidden_dim, 128),
             nn.ReLU(),
-            nn.Linear(256, 256),
-            nn.ReLU(),
-            nn.Linear(256, hidden_dim),
+            nn.Linear(128, latent_dim),
         )
 
-    def forward(self, h, action):
+    def forward(self, h):
         """
-        Args:
-            h      : [B, H]
-            action : [B]
+        h : [B, H]
+        z : [B, Z]
+        """
+        return self.net(h)
 
-        Returns:
-            h_next : [B, H]
+
+class LatentTransitionModel(nn.Module):
+    """
+    Transition in bottleneck latent space:
+        z_next = f(z, action)
+    """
+    def __init__(self, latent_dim=32, num_actions=4, action_emb_dim=16):
+        super().__init__()
+        self.action_embed = nn.Embedding(num_actions, action_emb_dim)
+        self.net = nn.Sequential(
+            nn.Linear(latent_dim + action_emb_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, latent_dim),
+        )
+
+    def forward(self, z, action):
+        """
+        z      : [B, Z]
+        action : [B]
         """
         a_emb = self.action_embed(action)          # [B, action_emb_dim]
-        x = torch.cat([h, a_emb], dim=-1)          # [B, H + action_emb_dim]
-        delta = self.delta_net(x)                  # [B, H]
-        h_next = h + delta                         # [B, H]
-        return h_next
+        x = torch.cat([z, a_emb], dim=-1)          # [B, Z + action_emb_dim]
+        z_next =  self.net(x)                       # [B, Z]
+        return z_next
 
 
-def rollout_multistep_pose_loss(
+class LatentPoseHead(nn.Module):
+    """
+    Decode pose directly from bottleneck latent z.
+    """
+    def __init__(self, latent_dim=32, num_rows=10, num_cols=10, num_headings=4):
+        super().__init__()
+        self.shared = nn.Sequential(
+            nn.Linear(latent_dim, 128),
+            nn.ReLU(),
+        )
+        self.row_head = nn.Linear(128, num_rows)
+        self.col_head = nn.Linear(128, num_cols)
+        self.heading_head = nn.Linear(128, num_headings)
+
+    def forward(self, z):
+        """
+        z : [B, Z]
+        returns:
+            row_logits     : [B, num_rows]
+            col_logits     : [B, num_cols]
+            heading_logits : [B, num_headings]
+        """
+        x = self.shared(z)
+        row_logits = self.row_head(x)
+        col_logits = self.col_head(x)
+        heading_logits = self.heading_head(x)
+        return row_logits, col_logits, heading_logits
+
+
+# ==========================================================
+# Loss and evaluation
+# ==========================================================
+
+def rollout_multistep_bottleneck_loss(
     h_seq,
     actions,
     pos,
     heading,
+    encoder,
     transition_model,
-    wm,
+    pose_head,
+    latent_loss_fn,
     ce_loss_fn,
     rollout_len=3,
+    lambda_latent=1.0,
+    lambda_pose=0.3,
     lambda_row=1.0,
     lambda_col=1.0,
     lambda_heading=5.0,
 ):
     """
-    Multi-step rollout loss using only pose supervision.
+    Multi-step rollout loss in bottleneck latent space.
 
-    Args:
-        h_seq    : [B, T, H]
-        actions  : [B, T-1]
-        pos      : [B, T, 2]
-        heading  : [B, T]
-
-    For each valid start time:
-        h_t --a_t--> h_{t+1}
-             --a_{t+1}--> h_{t+2}
-             ...
+    h_seq    : [B, T, H]    frozen GRU hidden states
+    actions  : [B, T-1]
+    pos      : [B, T, 2]
+    heading  : [B, T]
     """
-    _, T, _ = h_seq.shape
+    B, T, H = h_seq.shape
 
     total_loss = 0.0
     total_terms = 0
 
-    # Need targets up to start_t + rollout_len
     max_start = T - rollout_len - 1
     if max_start < 0:
         return torch.tensor(0.0, device=h_seq.device)
 
     for start_t in range(max_start + 1):
-        # Start rollout from the true hidden state
-        h_pred = h_seq[:, start_t, :]   # [B, H]
+        # Start from true hidden state, encoded into z
+        z_pred = encoder(h_seq[:, start_t, :])   # [B, Z]
 
         for k in range(rollout_len):
-            a_t = actions[:, start_t + k]                  # [B]
+            a_t = actions[:, start_t + k]                        # [B]
 
-            # Roll one step in hidden space
-            h_pred = transition_model(h_pred, a_t)
+            # True target latent from next true hidden state
+            z_target = encoder(h_seq[:, start_t + k + 1, :])     # [B, Z]
 
-            # Pose consistency through frozen GRU pose head
-            row_logits, col_logits, heading_logits = wm.pose_head(h_pred)
+            # Roll one step in z-space
+            z_pred = transition_model(z_pred, a_t)               # [B, Z]
+
+            # 1) latent consistency in z-space
+            loss_latent = latent_loss_fn(z_pred, z_target)
+
+            # 2) pose consistency from z-space
+            row_logits, col_logits, heading_logits = pose_head(z_pred)
 
             row_target = pos[:, start_t + k + 1, 0]       # [B]
             col_target = pos[:, start_t + k + 1, 1]       # [B]
@@ -108,23 +156,26 @@ def rollout_multistep_pose_loss(
                 + lambda_heading * ce_loss_fn(heading_logits, heading_target)
             )
 
-            total_loss = total_loss + loss_pose
+            loss = lambda_latent * loss_latent + lambda_pose * loss_pose
+
+            total_loss = total_loss + loss
             total_terms += 1
 
     return total_loss / max(total_terms, 1)
 
 
-def evaluate_pose_rollout_accuracy(
+def evaluate_bottleneck_rollout_accuracy(
     h_seq,
     actions,
     pos,
     heading,
+    encoder,
     transition_model,
-    wm,
+    pose_head,
     rollout_len=3,
 ):
     """
-    Compute free-rollout pose accuracy over all valid rollout steps.
+    Free-rollout pose accuracy in bottleneck latent space.
 
     Returns:
         row_correct, col_correct, heading_correct, total
@@ -142,13 +193,13 @@ def evaluate_pose_rollout_accuracy(
 
     with torch.no_grad():
         for start_t in range(max_start + 1):
-            h_pred = h_seq[:, start_t, :]   # [B, H]
+            z_pred = encoder(h_seq[:, start_t, :])   # [B, Z]
 
             for k in range(rollout_len):
                 a_t = actions[:, start_t + k]
-                h_pred = transition_model(h_pred, a_t)
+                z_pred = transition_model(z_pred, a_t)
 
-                row_logits, col_logits, heading_logits = wm.pose_head(h_pred)
+                row_logits, col_logits, heading_logits = pose_head(z_pred)
 
                 row_pred = row_logits.argmax(dim=1)
                 col_pred = col_logits.argmax(dim=1)
@@ -166,18 +217,29 @@ def evaluate_pose_rollout_accuracy(
     return row_correct, col_correct, heading_correct, total
 
 
-def train_hidden_transition_residual_pose_only(
+# ==========================================================
+# Main training
+# ==========================================================
+
+def train_bottleneck_latent_transition(
     dataset_path="../../dataset/tiny_nav_sequence_dataset.npz",
     gru_ckpt_path="checkpoints/best_gru_world_model.pt",
-    batch_size=64,
+    batch_size=128,
     lr=3e-4,
     epochs=25,
     rollout_len=3,
+    latent_dim=32,
+    lambda_latent=1.0,
+    lambda_pose=0.3,
     lambda_row=1.0,
     lambda_col=1.0,
     lambda_heading=5.0,
     save_dir="checkpoints",
+    seed=42,
 ):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Using device:", device)
 
@@ -228,15 +290,34 @@ def train_hidden_transition_residual_pose_only(
     print(f"Frozen GRU hidden_dim: {wm.hidden_dim}")
 
     # --------------------------------------------------
-    # Residual transition model to train
+    # Trainable bottleneck-latent modules
     # --------------------------------------------------
-    transition_model = ResidualHiddenTransitionModelMultiStepPose(
+    encoder = HiddenToLatentEncoder(
         hidden_dim=wm.hidden_dim,
+        latent_dim=latent_dim,
+    ).to(device)
+
+    transition_model = LatentTransitionModel(
+        latent_dim=latent_dim,
         num_actions=4,
         action_emb_dim=16,
     ).to(device)
 
-    optimizer = torch.optim.Adam(transition_model.parameters(), lr=lr)
+    pose_head = LatentPoseHead(
+        latent_dim=latent_dim,
+        num_rows=10,
+        num_cols=10,
+        num_headings=4,
+    ).to(device)
+
+    params = (
+        list(encoder.parameters())
+        + list(transition_model.parameters())
+        + list(pose_head.parameters())
+    )
+    optimizer = torch.optim.Adam(params, lr=lr)
+
+    latent_loss_fn = nn.MSELoss()
     ce_loss_fn = nn.CrossEntropyLoss()
 
     os.makedirs(save_dir, exist_ok=True)
@@ -246,7 +327,10 @@ def train_hidden_transition_residual_pose_only(
     # Training loop
     # --------------------------------------------------
     for epoch in range(1, epochs + 1):
+        encoder.train()
         transition_model.train()
+        pose_head.train()
+
         train_loss = 0.0
 
         for batch in train_loader:
@@ -260,15 +344,19 @@ def train_hidden_transition_residual_pose_only(
                 out = wm.forward_sequence(obs, actions)
                 h_seq = out["hidden_states"]        # [B, T, H]
 
-            loss = rollout_multistep_pose_loss(
+            loss = rollout_multistep_bottleneck_loss(
                 h_seq=h_seq,
                 actions=actions,
                 pos=pos,
                 heading=heading,
+                encoder=encoder,
                 transition_model=transition_model,
-                wm=wm,
+                pose_head=pose_head,
+                latent_loss_fn=latent_loss_fn,
                 ce_loss_fn=ce_loss_fn,
                 rollout_len=rollout_len,
+                lambda_latent=lambda_latent,
+                lambda_pose=lambda_pose,
                 lambda_row=lambda_row,
                 lambda_col=lambda_col,
                 lambda_heading=lambda_heading,
@@ -285,9 +373,11 @@ def train_hidden_transition_residual_pose_only(
         # --------------------------------------------------
         # Validation
         # --------------------------------------------------
+        encoder.eval()
         transition_model.eval()
-        val_loss = 0.0
+        pose_head.eval()
 
+        val_loss = 0.0
         total_row_correct = 0
         total_col_correct = 0
         total_heading_correct = 0
@@ -303,27 +393,32 @@ def train_hidden_transition_residual_pose_only(
                 out = wm.forward_sequence(obs, actions)
                 h_seq = out["hidden_states"]
 
-                loss = rollout_multistep_pose_loss(
+                loss = rollout_multistep_bottleneck_loss(
                     h_seq=h_seq,
                     actions=actions,
                     pos=pos,
                     heading=heading,
+                    encoder=encoder,
                     transition_model=transition_model,
-                    wm=wm,
+                    pose_head=pose_head,
+                    latent_loss_fn=latent_loss_fn,
                     ce_loss_fn=ce_loss_fn,
                     rollout_len=rollout_len,
+                    lambda_latent=lambda_latent,
+                    lambda_pose=lambda_pose,
                     lambda_row=lambda_row,
                     lambda_col=lambda_col,
                     lambda_heading=lambda_heading,
                 )
 
-                row_correct, col_correct, heading_correct, count = evaluate_pose_rollout_accuracy(
+                row_correct, col_correct, heading_correct, count = evaluate_bottleneck_rollout_accuracy(
                     h_seq=h_seq,
                     actions=actions,
                     pos=pos,
                     heading=heading,
+                    encoder=encoder,
                     transition_model=transition_model,
-                    wm=wm,
+                    pose_head=pose_head,
                     rollout_len=rollout_len,
                 )
 
@@ -350,25 +445,45 @@ def train_hidden_transition_residual_pose_only(
 
         if epoch >= 3 and val_loss < best_val_loss:
             best_val_loss = val_loss
-            save_path = os.path.join(save_dir, "best_hidden_transition_residual_pose_only.pt")
+            save_path = os.path.join(save_dir, "best_bottleneck_latent_transition.pt")
 
             torch.save(
                 {
-                    "model_state_dict": transition_model.state_dict(),
+                    "encoder_state_dict": encoder.state_dict(),
+                    "transition_model_state_dict": transition_model.state_dict(),
+                    "pose_head_state_dict": pose_head.state_dict(),
                     "hidden_dim": wm.hidden_dim,
+                    "latent_dim": latent_dim,
                     "rollout_len": rollout_len,
+                    "lambda_latent": lambda_latent,
+                    "lambda_pose": lambda_pose,
                     "lambda_row": lambda_row,
                     "lambda_col": lambda_col,
                     "lambda_heading": lambda_heading,
-                    "model_type": "residual_mlp_transition_pose_only",
+                    "model_type": "bottleneck_latent_transition",
                 },
                 save_path,
             )
-            print(f"  Saved best checkpoint to: {save_path}")
+    print(f"  Saved best checkpoint to: {save_path}")
 
-    print("Residual pose-only multistep transition training finished.")
+    print("Bottleneck latent transition training finished.")
     print("Best val loss:", best_val_loss)
 
 
 if __name__ == "__main__":
-    train_hidden_transition_residual_pose_only()
+    train_bottleneck_latent_transition(
+        dataset_path="../../dataset/tiny_nav_sequence_dataset.npz",
+        gru_ckpt_path="checkpoints/best_gru_world_model.pt",
+        batch_size=128,
+        lr=3e-4,
+        epochs=25,
+        rollout_len=3,
+        latent_dim=64,          # try 32 first
+        lambda_latent=0.5,
+        lambda_pose=1.0,
+        lambda_row=1.0,
+        lambda_col=1.0,
+        lambda_heading=5.0,
+        save_dir="checkpoints",
+        seed=42,
+    )
