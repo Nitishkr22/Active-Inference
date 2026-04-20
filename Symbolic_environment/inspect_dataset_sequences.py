@@ -273,3 +273,5 @@ if __name__ == "__main__":
         episode_indices=args.episodes,
         output_dir=args.output_dir,
     )
+
+    ## python3 inspect_dataset_sequences.py --dataset_path ../../dataset/train_dataset__v6.npz  --episodes 0 1 2 9  --output_dir ../../dataset/train_inspect_v6 ##
