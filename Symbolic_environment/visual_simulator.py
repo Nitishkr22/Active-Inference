@@ -11,9 +11,9 @@ from simulator import TinyIndoorEnv, Pose, ACTION_NAMES
 def print_help() -> None:
     print("\nControls:")
     print("  w : forward")
+    print("  x : backward")
     print("  a : turn_left")
     print("  d : turn_right")
-    print("  s : stay")
     print("  r : reset with random start/goal")
     print("  p : reset with user-defined start/goal")
     print("  g : toggle showing goal in ASCII map")
@@ -24,9 +24,9 @@ def print_help() -> None:
 def action_from_key(key: str):
     mapping = {
         "w": "forward",
+        "x": "backward",
         "a": "turn_left",
         "d": "turn_right",
-        "s": "stay",
     }
     return mapping.get(key, None)
 
@@ -58,7 +58,7 @@ def find_valid_pose(env: TinyIndoorEnv) -> Pose:
         h = ask_heading()
         try:
             pose = Pose(r, c, h)
-            env._validate_pose(pose)   # okay for debugging script
+            env._validate_pose(pose)   # okay for debugging
             return pose
         except Exception as e:
             print(f"Invalid pose: {e}")
@@ -67,15 +67,11 @@ def find_valid_pose(env: TinyIndoorEnv) -> Pose:
 def find_valid_goal(env: TinyIndoorEnv, start_pose: Pose) -> tuple[int, int]:
     while True:
         r = ask_int(f"Goal row [0, {env.rows - 1}]: ", 0, env.rows - 1)
-        c = ask_int(f"Goal col [0, {env.cols - 1}]: ", 0, env.rows - 1)  # fixed below
-        # correction:
-        if c > env.cols - 1:
-            print(f"Please enter a value in [0, {env.cols - 1}]")
-            continue
+        c = ask_int(f"Goal col [0, {env.cols - 1}]: ", 0, env.cols - 1)
 
         goal = (r, c)
         try:
-            env._validate_goal(goal)   # okay for debugging script
+            env._validate_goal(goal)   # okay for debugging
             if not env.is_reachable((start_pose.row, start_pose.col), goal):
                 print("Goal is not reachable from the chosen start pose.")
                 continue
@@ -98,6 +94,7 @@ def draw(
     ax_img.axis("off")
 
     fig.canvas.draw_idle()
+    plt.pause(0.001)
 
     print("\n" + "=" * 70)
     print("Top-down ASCII map:")
@@ -156,19 +153,7 @@ def main() -> None:
         elif key == "p":
             print("\nChoose custom start pose:")
             start_pose = find_valid_pose(env)
-
-            while True:
-                try:
-                    gr = ask_int(f"Goal row [0, {env.rows - 1}]: ", 0, env.rows - 1)
-                    gc = ask_int(f"Goal col [0, {env.cols - 1}]: ", 0, env.cols - 1)
-                    goal = (gr, gc)
-                    env._validate_goal(goal)
-                    if not env.is_reachable((start_pose.row, start_pose.col), goal):
-                        print("Goal is not reachable from the chosen start pose.")
-                        continue
-                    break
-                except Exception as e:
-                    print(f"Invalid goal: {e}")
+            goal = find_valid_goal(env, start_pose)
 
             obs, info = env.reset(start_pose=start_pose, goal_pos=goal)
             draw(env, obs, info, show_goal_in_ascii, fig, ax_img)

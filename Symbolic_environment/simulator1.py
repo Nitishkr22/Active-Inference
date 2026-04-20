@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Dict
+from typing import List, Optional, Tuple, Dict, Set
 import math
 import random
+from collections import deque
 
 import numpy as np
 
@@ -49,7 +50,7 @@ class TinyIndoorEnv:
     Grid world with:
       - wall/appearance symbols: #, A, B, C, L, M
       - traversable symbols: ., P
-      - goal stored internally but NOT rendered into observations
+      - optional goal stored internally but NOT rendered into observations
 
     First-person renderer:
       - grayscale image
@@ -57,7 +58,10 @@ class TinyIndoorEnv:
       - different symbols produce different brightness/patterns
       - floor patches influence appearance near the lower image region
 
-    The goal is task metadata only; it does not appear in rendered images.
+    Important:
+      - Goal never appears in rendered first-person observations.
+      - Map is designed so all traversable cells belong to one connected region.
+      - For dataset generation, use reset(use_goal=False).
     """
 
     def __init__(
@@ -91,22 +95,23 @@ class TinyIndoorEnv:
         self.rows = len(self.grid)
         self.cols = len(self.grid[0])
 
-        self._validate_grid()
-
         self.blocking_symbols = {"#", "A", "B", "C", "L", "M"}
         self.traversable_symbols = {".", "P"}
+
+        self._validate_grid()
+
+        self.free_cells = self._find_free_cells()
+        if len(self.free_cells) == 0:
+            raise ValueError("No traversable cells found in the map.")
+
+        self._validate_connected_traversable_space()
 
         # Internal state
         self.pose: Optional[Pose] = None
         self.goal_pos: Optional[Tuple[int, int]] = None
+        self.use_goal: bool = False
         self.last_action: Optional[str] = None
         self.steps: int = 0
-
-        # Cache traversable cells for sampling
-        self.free_cells = self._find_free_cells()
-
-        if len(self.free_cells) == 0:
-            raise ValueError("No traversable cells found in the map.")
 
     # ========================================================
     # Public API
@@ -117,15 +122,17 @@ class TinyIndoorEnv:
         start_pose: Optional[Pose] = None,
         goal_pos: Optional[Tuple[int, int]] = None,
         min_goal_dist: int = 3,
+        use_goal: bool = False,
     ) -> Tuple[np.ndarray, Dict]:
         """
         Reset environment.
 
         Args:
             start_pose: Optional fixed start pose.
-            goal_pos: Optional fixed goal position (stored, not rendered).
+            goal_pos: Optional fixed goal position.
             min_goal_dist: Minimum Manhattan distance between start and goal
-                           when both are sampled / partially sampled.
+                           when sampled.
+            use_goal: If False, no goal is used and no terminal goal logic is active.
 
         Returns:
             obs, info
@@ -137,20 +144,26 @@ class TinyIndoorEnv:
         else:
             self._validate_pose(start_pose)
 
-        if goal_pos is None:
-            goal_pos = self._sample_goal_far_from(
-                start=(start_pose.row, start_pose.col),
-                min_goal_dist=min_goal_dist,
-            )
-        else:
-            self._validate_goal(goal_pos)
-            dist = abs(goal_pos[0] - start_pose.row) + abs(goal_pos[1] - start_pose.col)
-            if dist < min_goal_dist:
-                # Allowed, but warn via info later if needed
-                pass
-
         self.pose = start_pose
-        self.goal_pos = goal_pos
+        self.use_goal = use_goal
+
+        if use_goal:
+            if goal_pos is None:
+                goal_pos = self._sample_goal_far_from(
+                    start=(start_pose.row, start_pose.col),
+                    min_goal_dist=min_goal_dist,
+                )
+            else:
+                self._validate_goal(goal_pos)
+                if not self.is_reachable((start_pose.row, start_pose.col), goal_pos):
+                    raise ValueError(
+                        f"Provided goal {goal_pos} is not reachable from start "
+                        f"{(start_pose.row, start_pose.col)}"
+                    )
+            self.goal_pos = goal_pos
+        else:
+            self.goal_pos = None
+
         self.last_action = None
         self.steps = 0
 
@@ -169,7 +182,7 @@ class TinyIndoorEnv:
             2 / "turn_right"
             3 / "stay"
         """
-        if self.pose is None or self.goal_pos is None:
+        if self.pose is None:
             raise RuntimeError("Environment not reset. Call reset() first.")
 
         action_name = self._normalize_action(action)
@@ -187,12 +200,14 @@ class TinyIndoorEnv:
             self.pose.heading = HEADINGS[(HEADING_TO_IDX[self.pose.heading] + 1) % 4]
 
         elif action_name == "stay":
+            # Agent remains in same pose by design
             pass
 
         elif action_name == "forward":
             dr, dc = self._heading_to_delta(self.pose.heading)
             nr, nc = self.pose.row + dr, self.pose.col + dc
 
+            # Collision case: agent stays in same position
             if not self._in_bounds(nr, nc) or self._is_blocking(nr, nc):
                 collision = True
                 reward += self.collision_penalty
@@ -203,11 +218,13 @@ class TinyIndoorEnv:
         else:
             raise ValueError(f"Unsupported action: {action_name}")
 
-        if (self.pose.row, self.pose.col) == self.goal_pos:
-            reached_goal = True
-            reward += self.goal_reward
+        if self.use_goal and self.goal_pos is not None:
+            if (self.pose.row, self.pose.col) == self.goal_pos:
+                reached_goal = True
+                reward += self.goal_reward
 
-        done = reached_goal
+        done = reached_goal if self.use_goal else False
+
         obs = self.render_first_person()
         info = self._build_info(collision=collision, reached_goal=reached_goal)
 
@@ -228,7 +245,7 @@ class TinyIndoorEnv:
 
         img = np.zeros((H, W), dtype=np.float32)
 
-        # Simple sky / ceiling and ground base
+        # Ceiling and floor base
         img[: H // 2, :] = 0.02
         img[H // 2 :, :] = 0.08
 
@@ -243,7 +260,6 @@ class TinyIndoorEnv:
             symbol = hit["symbol"]
             hit_row, hit_col = hit["cell"]
 
-            # Inverse-distance wall height heuristic
             wall_height = int(min(H, max(2, (H * 0.95) / (dist + 0.25))))
             y0 = max(0, (H - wall_height) // 2)
             y1 = min(H, y0 + wall_height)
@@ -259,7 +275,6 @@ class TinyIndoorEnv:
 
             img[y0:y1, x] = wall_column
 
-            # Add floor cues below the wall using forward sample positions
             if y1 < H:
                 floor_vals = self._make_floor_column(
                     start_y=y1,
@@ -268,12 +283,10 @@ class TinyIndoorEnv:
                 )
                 img[y1:H, x] = floor_vals
 
-        # Mild vignette-like darkening near edges
         xx = np.linspace(-1.0, 1.0, W, dtype=np.float32)
         vignette = 1.0 - 0.08 * (xx ** 2)
         img *= vignette[None, :]
 
-        # Tiny observation noise helps prevent overfitting to exact pixel patterns
         noise = self.np_rng.normal(loc=0.0, scale=0.004, size=img.shape).astype(np.float32)
         img = np.clip(img + noise, 0.0, 1.0)
 
@@ -283,8 +296,8 @@ class TinyIndoorEnv:
         """
         Debug text rendering of the map with current agent pose.
 
-        show_goal controls whether goal is shown in this ASCII debug view.
-        It does NOT affect first-person observations.
+        show_goal only affects ASCII visualization.
+        It never affects first-person observations.
         """
         if self.pose is None:
             raise RuntimeError("Environment not reset. Call reset() first.")
@@ -298,7 +311,7 @@ class TinyIndoorEnv:
                 ch = self.grid[r][c]
                 if (r, c) == (self.pose.row, self.pose.col):
                     row_chars.append(arrow)
-                elif show_goal and self.goal_pos is not None and (r, c) == self.goal_pos:
+                elif show_goal and self.use_goal and self.goal_pos is not None and (r, c) == self.goal_pos:
                     row_chars.append("G")
                 else:
                     row_chars.append(ch)
@@ -313,32 +326,82 @@ class TinyIndoorEnv:
             raise RuntimeError("Environment not reset. Call reset() first.")
         return self.pose.row, self.pose.col, HEADING_TO_IDX[self.pose.heading]
 
+    def is_reachable(
+        self,
+        start: Tuple[int, int],
+        goal: Tuple[int, int],
+    ) -> bool:
+        if not self._in_bounds(*start) or not self._in_bounds(*goal):
+            return False
+        if self._is_blocking(*start) or self._is_blocking(*goal):
+            return False
+        if start == goal:
+            return True
+
+        visited: Set[Tuple[int, int]] = set()
+        q = deque([start])
+        visited.add(start)
+
+        while q:
+            r, c = q.popleft()
+            for nr, nc in self._neighbors4(r, c):
+                if (nr, nc) in visited:
+                    continue
+                if self._is_blocking(nr, nc):
+                    continue
+                if (nr, nc) == goal:
+                    return True
+                visited.add((nr, nc))
+                q.append((nr, nc))
+
+        return False
+
+    def shortest_path_length(
+        self,
+        start: Tuple[int, int],
+        goal: Tuple[int, int],
+    ) -> Optional[int]:
+        if not self._in_bounds(*start) or not self._in_bounds(*goal):
+            return None
+        if self._is_blocking(*start) or self._is_blocking(*goal):
+            return None
+        if start == goal:
+            return 0
+
+        visited: Set[Tuple[int, int]] = set()
+        q = deque([(start[0], start[1], 0)])
+        visited.add(start)
+
+        while q:
+            r, c, d = q.popleft()
+            for nr, nc in self._neighbors4(r, c):
+                if (nr, nc) in visited:
+                    continue
+                if self._is_blocking(nr, nc):
+                    continue
+                if (nr, nc) == goal:
+                    return d + 1
+                visited.add((nr, nc))
+                q.append((nr, nc, d + 1))
+
+        return None
+
     # ========================================================
     # Internal map helpers
     # ========================================================
 
     def _default_map(self) -> List[str]:
-        """
-        A controlled asymmetric map with:
-          - structural walls (#)
-          - wall texture variants (A, B, C)
-          - landmark walls (L, M)
-          - floor patches (P)
-          - traversable free cells (.)
-
-        Goal is NOT part of the static map.
-        """
         return [
-            "##########",
-            "#...A....#",
+            "A#######BC",
+            "#...P....#",
             "#.###.##L#",
-            "#.#..P...#",
-            "#.#.###..#",
-            "#...#..B.#",
-            "###.#.##.#",
-            "#..M#..P.#",
+            "#.#......#",
+            "#.#.###P.#",
+            "#...#....#",
+            "#P#.#.##.#",
+            "#..M#....#",
             "#....C...#",
-            "##########",
+            "B#######A#",
         ]
 
     def _parse_grid(self, grid_map: List[str]) -> List[List[str]]:
@@ -367,6 +430,33 @@ class TinyIndoorEnv:
                 if self.grid[r][c] in self.traversable_symbols:
                     free.append((r, c))
         return free
+
+    def _validate_connected_traversable_space(self) -> None:
+        if not self.free_cells:
+            raise ValueError("No traversable cells available.")
+
+        start = self.free_cells[0]
+        visited = set()
+        q = deque([start])
+        visited.add(start)
+
+        while q:
+            r, c = q.popleft()
+            for nr, nc in self._neighbors4(r, c):
+                if (nr, nc) in visited:
+                    continue
+                if self._is_blocking(nr, nc):
+                    continue
+                visited.add((nr, nc))
+                q.append((nr, nc))
+
+        free_set = set(self.free_cells)
+        if visited != free_set:
+            missing = sorted(list(free_set - visited))
+            raise ValueError(
+                "Traversable space is not fully connected. "
+                f"Unreachable free cells found: {missing[:10]}"
+            )
 
     def _validate_pose(self, pose: Pose) -> None:
         if pose.heading not in HEADINGS:
@@ -400,6 +490,14 @@ class TinyIndoorEnv:
 
         return self.rng.choice(candidates)
 
+    def _neighbors4(self, r: int, c: int) -> List[Tuple[int, int]]:
+        nbrs = []
+        for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            nr, nc = r + dr, c + dc
+            if self._in_bounds(nr, nc):
+                nbrs.append((nr, nc))
+        return nbrs
+
     # ========================================================
     # Internal dynamics helpers
     # ========================================================
@@ -427,7 +525,6 @@ class TinyIndoorEnv:
         raise ValueError(f"Invalid heading: {heading}")
 
     def _heading_to_angle_deg(self, heading: str) -> float:
-        # 0 deg = east/right, 90 = south/down in grid row-col geometry
         if heading == "E":
             return 0.0
         if heading == "S":
@@ -446,14 +543,14 @@ class TinyIndoorEnv:
 
     def _build_info(self, collision: bool, reached_goal: bool) -> Dict:
         assert self.pose is not None
-        assert self.goal_pos is not None
         return {
             "row": self.pose.row,
             "col": self.pose.col,
             "heading": self.pose.heading,
             "heading_idx": HEADING_TO_IDX[self.pose.heading],
-            "goal_row": self.goal_pos[0],
-            "goal_col": self.goal_pos[1],
+            "goal_row": self.goal_pos[0] if self.goal_pos is not None else None,
+            "goal_col": self.goal_pos[1] if self.goal_pos is not None else None,
+            "use_goal": self.use_goal,
             "collision": collision,
             "reached_goal": reached_goal,
             "steps": self.steps,
@@ -465,23 +562,17 @@ class TinyIndoorEnv:
     # ========================================================
 
     def _cast_ray(self, ray_angle_deg: float) -> Dict:
-        """
-        March a ray from the agent center until hitting a blocking cell or
-        max_view_dist. Returns the first blocking symbol encountered.
-        """
         assert self.pose is not None
 
         angle_rad = math.radians(ray_angle_deg)
-        dx = math.cos(angle_rad)   # col direction
-        dy = math.sin(angle_rad)   # row direction
+        dx = math.cos(angle_rad)
+        dy = math.sin(angle_rad)
 
-        # Agent center in continuous coordinates
         r0 = self.pose.row + 0.5
         c0 = self.pose.col + 0.5
 
         step_size = 0.03
         dist = 0.0
-
         last_r, last_c = self.pose.row, self.pose.col
 
         while dist < self.max_view_dist:
@@ -515,13 +606,10 @@ class TinyIndoorEnv:
         }
 
     def _symbol_base_intensity(self, symbol: str) -> float:
-        """
-        Base wall brightness by symbol.
-        """
         mapping = {
             "#": 0.85,
             "A": 0.95,
-            "B": 0.70,
+            "B": 0.72,
             "C": 0.50,
             "L": 0.88,
             "M": 0.62,
@@ -537,59 +625,40 @@ class TinyIndoorEnv:
         hit_row: int,
         hit_col: int,
     ) -> np.ndarray:
-        """
-        Produce a 1D column for a wall slice.
-        """
         col = np.ones((height,), dtype=np.float32) * self._symbol_base_intensity(symbol)
 
-        # Distance attenuation
         attenuation = 1.0 / (1.0 + 0.12 * dist * dist)
         col *= attenuation * 1.8
         col = np.clip(col, 0.0, 1.0)
 
-        # Vertical shading: slightly darker toward bottom
         yy = np.linspace(0.0, 1.0, height, dtype=np.float32)
         col *= (0.95 - 0.15 * yy)
 
-        # Symbol-specific texture
         if symbol == "#":
-            # Plain wall with mild grain
             grain = 0.015 * np.sin(np.linspace(0, 10, height, dtype=np.float32))
             col += grain
-
         elif symbol == "A":
-            # Brighter stripe-like texture
             stripes = 0.08 * (np.sin(np.linspace(0, 22, height, dtype=np.float32)) > 0).astype(np.float32)
             col += stripes
-
         elif symbol == "B":
-            # Medium wall with softer banding
             bands = 0.05 * np.sin(np.linspace(0, 16, height, dtype=np.float32))
             col += bands
-
         elif symbol == "C":
-            # Darker wall with sparse highlight
             highlight = np.zeros((height,), dtype=np.float32)
             highlight[::5] = 0.06
             col += highlight
-
         elif symbol == "L":
-            # Landmark 1: strong repeated pulses
             pulses = 0.12 * (np.sin(np.linspace(0, 28, height, dtype=np.float32)) > 0.4).astype(np.float32)
             col += pulses
-
         elif symbol == "M":
-            # Landmark 2: alternating dark/light sections
             alt = np.zeros((height,), dtype=np.float32)
             alt[::6] = 0.10
             alt[3::6] = -0.06
             col += alt
 
-        # Very small cell-dependent modulation
         cell_mod = 0.015 * (((hit_row + hit_col) % 3) - 1)
         col += cell_mod
 
-        # Slight angular modulation
         angle_mod = 0.01 * math.sin(math.radians(ray_angle_deg * 3.0))
         col += angle_mod
 
@@ -601,11 +670,6 @@ class TinyIndoorEnv:
         H: int,
         ray_angle_deg: float,
     ) -> np.ndarray:
-        """
-        Create floor appearance below the wall slice.
-        Floor patches 'P' are visible as different brightness near the lower region
-        based on approximate forward sampling along the ray.
-        """
         assert self.pose is not None
 
         floor = np.zeros((H - start_y,), dtype=np.float32)
@@ -618,8 +682,6 @@ class TinyIndoorEnv:
         c0 = self.pose.col + 0.5
 
         for idx, y in enumerate(range(start_y, H)):
-            # Perspective-inspired depth estimate:
-            # lower pixels correspond to closer floor points
             rel = (y - H / 2) / max(H / 2, 1)
             rel = max(rel, 1e-3)
             sample_dist = 0.5 + 1.7 / rel
@@ -645,23 +707,16 @@ class TinyIndoorEnv:
         return np.clip(floor, 0.0, 1.0).astype(np.float32)
 
 
-# ============================================================
-# Simple manual test
-# ============================================================
-
 if __name__ == "__main__":
     env = TinyIndoorEnv(seed=42)
 
-    obs, info = env.reset()
-    print("Initial top-down map:")
+    print("=== Goal-free reset for dataset-style rollout ===")
+    obs, info = env.reset(use_goal=False)
     print(env.render_topdown_ascii(show_goal=True))
-    print("\nInitial info:", info)
-    print("Observation shape:", obs.shape, "dtype:", obs.dtype, "min/max:", obs.min(), obs.max())
+    print("info:", info)
+    print("obs:", obs.shape, obs.min(), obs.max())
 
-    demo_actions = ["forward", "forward", "turn_right", "forward", "stay", "turn_left", "forward", "forward","turn_left", "forward", "turn_right", "forward", "forward", "forward", 
-    "turn_left", "forward", "forward", "forward", "turn_right", "forward", "forward","turn_left", "forward", "turn_left", "forward", "forward", "turn_right", "forward", "forward",
-     "turn_left", "forward", "forward", "turn_right", "forward", "forward", "forward", "forward","turn_right", "forward", "forward", "forward", "forward", "turn_right"
-     , "forward", "forward"]
+    demo_actions = ["forward", "forward", "turn_left", "stay", "forward"]
 
     for i, action in enumerate(demo_actions, start=1):
         result = env.step(action)
@@ -670,6 +725,3 @@ if __name__ == "__main__":
         print("info:", result.info)
         print("reward:", result.reward, "done:", result.done)
         print("obs stats:", result.obs.shape, result.obs.min(), result.obs.max())
-        if result.done:
-            print("Reached goal.")
-            break
