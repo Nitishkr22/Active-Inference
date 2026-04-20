@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import os
 import math
+import random
 from dataclasses import dataclass
 from typing import Dict, Tuple
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -23,39 +25,64 @@ from model_v1 import ModelV1Config, WorldModelV1
 
 @dataclass
 class TrainConfig:
+    # --------------------------------------------------------
     # Dataset / loaders
+    # Defaults chosen for RTX 3080-style training
+    # --------------------------------------------------------
     dataset_path: str = "../../dataset/train_dataset__v6.npz"
     val_fraction: float = 0.1
-    batch_size: int = 64
+
+    batch_size: int = 32
     num_workers: int = 4
     pin_memory: bool = True
     shuffle_train: bool = True
     persistent_workers: bool = True
     prefetch_factor: int = 2
 
+    # --------------------------------------------------------
     # Optimization
+    # --------------------------------------------------------
     lr: float = 1e-3
     weight_decay: float = 1e-5
     num_epochs: int = 30
     grad_clip_norm: float = 1.0
 
+    # --------------------------------------------------------
     # Rollout
+    # --------------------------------------------------------
     rollout_start_t_min: int = 4
     rollout_horizon: int = 5
 
+    # --------------------------------------------------------
     # Loss weights
+    # Slightly more reconstruction-friendly than before
+    # --------------------------------------------------------
     w_recon: float = 1.0
-    w_pose: float = 1.0
+    w_pose: float = 0.8
     w_roll_latent: float = 1.0
     w_roll_pose: float = 1.0
-    w_roll_recon: float = 0.5
+    w_roll_recon: float = 1.0
 
+    # --------------------------------------------------------
     # Logging / saving
+    # --------------------------------------------------------
     print_every: int = 50
     save_dir: str = "./checkpoints_v1"
-    save_every_epoch: bool = True
 
+    # --------------------------------------------------------
+    # Runtime
+    # --------------------------------------------------------
+    use_amp: bool = True
+    use_channels_last: bool = False
+
+    # For reproducibility/debugging.
+    # deterministic=True can reduce machine-to-machine variation,
+    # but may slow training.
+    deterministic: bool = False
+
+    # --------------------------------------------------------
     # Reproducibility
+    # --------------------------------------------------------
     seed: int = 42
 
 
@@ -63,9 +90,26 @@ class TrainConfig:
 # Reproducibility
 # ============================================================
 
-def set_seed(seed: int) -> None:
+def set_seed(seed: int, deterministic: bool = False) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
+
+    if deterministic:
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        try:
+            torch.use_deterministic_algorithms(True)
+        except Exception:
+            pass
+    else:
+        torch.backends.cudnn.deterministic = False
+        torch.backends.cudnn.benchmark = True
+
+    # Good default on Ampere GPUs like RTX 3080
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
 
 
 # ============================================================
@@ -102,10 +146,6 @@ def compute_pose_loss(
       rows           : [B,T] or [B,K]
       cols           : [B,T] or [B,K]
       headings       : [B,T] or [B,K]
-
-    Returns:
-      total pose loss
-      dict of components
     """
     B, T, R = row_logits.shape
     _, _, C = col_logits.shape
@@ -124,6 +164,7 @@ def compute_pose_loss(
 
 
 def sample_rollout_start_and_targets(
+    observations: torch.Tensor,
     z_seq: torch.Tensor,
     h_seq: torch.Tensor,
     actions: torch.Tensor,
@@ -137,18 +178,20 @@ def sample_rollout_start_and_targets(
     Select one rollout start per batch element.
 
     Inputs:
-      z_seq     : [B,T,Z]
-      h_seq     : [B,T,H]
-      actions   : [B,T-1]
-      rows      : [B,T]
-      cols      : [B,T]
-      headings  : [B,T]
+      observations : [B,T,1,H,W]
+      z_seq        : [B,T,Z]
+      h_seq        : [B,T,H]
+      actions      : [B,T-1]
+      rows         : [B,T]
+      cols         : [B,T]
+      headings     : [B,T]
 
     Returns:
       z_start        : [B,Z]
       h_start        : [B,H]
       action_roll    : [B,K]
       z_target       : [B,K,Z]
+      obs_target     : [B,K,1,H,W]
       row_target     : [B,K]
       col_target     : [B,K]
       heading_target : [B,K]
@@ -156,8 +199,6 @@ def sample_rollout_start_and_targets(
     B, T, Z = z_seq.shape
     K = rollout_horizon
 
-    # valid start t must allow K future action steps
-    # if actions are [0 ... T-2], then start t can be at most T-1-K
     t_min = rollout_start_t_min
     t_max = T - 1 - K
     if t_max < t_min:
@@ -173,16 +214,20 @@ def sample_rollout_start_and_targets(
     h_start_list = []
     action_roll_list = []
     z_target_list = []
+    obs_target_list = []
     row_target_list = []
     col_target_list = []
     heading_target_list = []
 
     for b in range(B):
         t = int(t0[b].item())
-        z_start_list.append(z_seq[b, t])                  # z_t
-        h_start_list.append(h_seq[b, t])                  # h_t
-        action_roll_list.append(actions[b, t:t + K])      # a_t ... a_{t+K-1}
-        z_target_list.append(z_seq[b, t + 1:t + 1 + K])   # z_{t+1} ... z_{t+K}
+
+        z_start_list.append(z_seq[b, t])                        # z_t
+        h_start_list.append(h_seq[b, t])                        # h_t
+        action_roll_list.append(actions[b, t:t + K])            # a_t ... a_{t+K-1}
+
+        z_target_list.append(z_seq[b, t + 1:t + 1 + K])         # z_{t+1} ... z_{t+K}
+        obs_target_list.append(observations[b, t + 1:t + 1 + K])
         row_target_list.append(rows[b, t + 1:t + 1 + K])
         col_target_list.append(cols[b, t + 1:t + 1 + K])
         heading_target_list.append(headings[b, t + 1:t + 1 + K])
@@ -192,6 +237,7 @@ def sample_rollout_start_and_targets(
         "h_start": torch.stack(h_start_list, dim=0),
         "action_roll": torch.stack(action_roll_list, dim=0),
         "z_target": torch.stack(z_target_list, dim=0),
+        "obs_target": torch.stack(obs_target_list, dim=0),
         "row_target": torch.stack(row_target_list, dim=0),
         "col_target": torch.stack(col_target_list, dim=0),
         "heading_target": torch.stack(heading_target_list, dim=0),
@@ -222,7 +268,7 @@ def compute_batch_losses(
     heading_logits_seq = filt["heading_logits_seq"]        # [B,T,Hd]
 
     # --------------------------------------------------------
-    # Reconstruction loss
+    # Reconstruction loss on filtered states
     # --------------------------------------------------------
     recon_loss = F.l1_loss(recon_seq, observations)
 
@@ -239,9 +285,10 @@ def compute_batch_losses(
     )
 
     # --------------------------------------------------------
-    # Rollout loss
+    # Rollout targets
     # --------------------------------------------------------
     rollout_targets = sample_rollout_start_and_targets(
+        observations=observations,
         z_seq=z_seq,
         h_seq=h_seq,
         actions=actions,
@@ -265,10 +312,14 @@ def compute_batch_losses(
     heading_logits_roll = roll["heading_logits_roll"]      # [B,K,Hd]
 
     z_target = rollout_targets["z_target"]                 # [B,K,Z]
+    obs_target = rollout_targets["obs_target"]             # [B,K,1,H,W]
     row_target = rollout_targets["row_target"]             # [B,K]
     col_target = rollout_targets["col_target"]             # [B,K]
     heading_target = rollout_targets["heading_target"]     # [B,K]
 
+    # --------------------------------------------------------
+    # Rollout losses
+    # --------------------------------------------------------
     roll_latent_loss = F.mse_loss(z_roll, z_target)
 
     roll_pose_loss, roll_pose_parts = compute_pose_loss(
@@ -280,34 +331,10 @@ def compute_batch_losses(
         heading_target,
     )
 
-    # reconstruct future target observations using rollout target time range
-    # Need true future observations corresponding to t+1 ... t+K
-    # We reconstruct them from the same sampled windows
-    B, T, C, H, W = observations.shape
-    K = cfg.rollout_horizon
-    device = observations.device
-
-    # Rebuild true observation rollout targets with same sampling logic
-    # We resample consistently by deriving from z_target windows through rows? No.
-    # Better: reuse sampled t0 logic inside helper would be more elegant, but here
-    # we can reconstruct directly from z_target alignment only if we also sampled obs targets.
-    # To keep code clean, we rederive them here in a consistent loop using the same rollout targets size.
-    # Since rollout_targets already stores t-specific targets except obs, add obs now by matching lengths.
-
-    # We recover obs target by comparing z_target windows length K and using rows target length K.
-    # But exact time index isn't stored, so let's extend helper later if needed.
-    # For now, obtain future obs target directly by nearest-aligned latent target is not correct.
-    # Better: modify helper minimally here by resampling same random starts again is wrong.
-    # Therefore, simplest fix: rollout recon loss computed against filtered recon target z_target decoded?
-    # That would compare imaginations to decoder(z_target), but we want actual image target.
-    # To stay correct, use decoder-target images from filtered actual sequence latents is indirect.
-    # Since decoder is shared, rollout recon against actual observations is preferred.
-    # We'll skip exact obs-target mismatch by using target reconstructions from filtered path:
-    with torch.no_grad():
-        recon_target_flat = model.decoder(z_target.reshape(-1, z_target.shape[-1]))
-        recon_target = recon_target_flat.view(z_target.shape[0], z_target.shape[1], C, H, W)
-
-    roll_recon_loss = F.l1_loss(recon_roll, recon_target)
+    # Important fix:
+    # compare rollout reconstruction with TRUE future observations,
+    # not decoded target latents.
+    roll_recon_loss = F.l1_loss(recon_roll, obs_target)
 
     # --------------------------------------------------------
     # Total loss
@@ -349,6 +376,7 @@ def run_epoch(
     device: torch.device,
     cfg: TrainConfig,
     train: bool,
+    scaler: torch.cuda.amp.GradScaler | None,
 ) -> Dict[str, float]:
     if train:
         model.train()
@@ -365,12 +393,21 @@ def run_epoch(
             optimizer.zero_grad(set_to_none=True)
 
         with torch.set_grad_enabled(train):
-            loss, metrics = compute_batch_losses(model, batch, cfg)
+            with torch.cuda.amp.autocast(enabled=(cfg.use_amp and device.type == "cuda")):
+                loss, metrics = compute_batch_losses(model, batch, cfg)
 
             if train:
-                loss.backward()
-                nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip_norm)
-                optimizer.step()
+                assert optimizer is not None
+                if scaler is not None and cfg.use_amp and device.type == "cuda":
+                    scaler.scale(loss).backward()
+                    scaler.unscale_(optimizer)
+                    nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip_norm)
+                    scaler.step(optimizer)
+                    scaler.update()
+                else:
+                    loss.backward()
+                    nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip_norm)
+                    optimizer.step()
 
         for k, v in metrics.items():
             total_metrics[k] = total_metrics.get(k, 0.0) + v
@@ -384,7 +421,8 @@ def run_epoch(
                 f"recon={metrics['loss_recon']:.4f} | "
                 f"pose={metrics['loss_pose']:.4f} | "
                 f"roll_lat={metrics['loss_roll_latent']:.4f} | "
-                f"roll_pose={metrics['loss_roll_pose']:.4f}"
+                f"roll_pose={metrics['loss_roll_pose']:.4f} | "
+                f"roll_recon={metrics['loss_roll_recon']:.4f}"
             )
 
     avg_metrics = {k: v / max(num_batches, 1) for k, v in total_metrics.items()}
@@ -401,17 +439,21 @@ def save_checkpoint(
     epoch: int,
     cfg: TrainConfig,
     save_path: str,
+    extra: Dict | None = None,
 ) -> None:
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    torch.save(
-        {
-            "epoch": epoch,
-            "model_state_dict": model.state_dict(),
-            "optimizer_state_dict": optimizer.state_dict(),
-            "train_config": cfg.__dict__,
-        },
-        save_path,
-    )
+
+    ckpt = {
+        "epoch": epoch,
+        "model_state_dict": model.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
+        "train_config": cfg.__dict__,
+    }
+
+    if extra is not None:
+        ckpt.update(extra)
+
+    torch.save(ckpt, save_path)
 
 
 # ============================================================
@@ -419,11 +461,11 @@ def save_checkpoint(
 # ============================================================
 
 def main() -> None:
-    set_seed(42)
+    cfg = TrainConfig()
+
+    set_seed(cfg.seed, deterministic=cfg.deterministic)
     device = get_device()
     print(f"Using device: {device}")
-
-    cfg = TrainConfig()
 
     # --------------------------------------------------------
     # Loaders
@@ -438,7 +480,7 @@ def main() -> None:
         seed=cfg.seed,
         persistent_workers=cfg.persistent_workers,
         prefetch_factor=cfg.prefetch_factor,
-        drop_last_train=cfg.batch_size > 1,
+        drop_last_train=True,
         drop_last_val=False,
     )
 
@@ -468,10 +510,17 @@ def main() -> None:
     )
 
     model = WorldModelV1(model_cfg).to(device)
+
+    if cfg.use_channels_last and device.type == "cuda":
+        model = model.to(memory_format=torch.channels_last)
+
     optimizer = Adam(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
 
-    os.makedirs(cfg.save_dir, exist_ok=True)
+    scaler = None
+    if cfg.use_amp and device.type == "cuda":
+        scaler = torch.cuda.amp.GradScaler()
 
+    os.makedirs(cfg.save_dir, exist_ok=True)
     best_val_loss = math.inf
 
     # --------------------------------------------------------
@@ -487,6 +536,7 @@ def main() -> None:
             device=device,
             cfg=cfg,
             train=True,
+            scaler=scaler,
         )
 
         val_metrics = run_epoch(
@@ -496,6 +546,7 @@ def main() -> None:
             device=device,
             cfg=cfg,
             train=False,
+            scaler=None,
         )
 
         print(
@@ -504,7 +555,8 @@ def main() -> None:
             f"recon={train_metrics['loss_recon']:.4f} | "
             f"pose={train_metrics['loss_pose']:.4f} | "
             f"roll_lat={train_metrics['loss_roll_latent']:.4f} | "
-            f"roll_pose={train_metrics['loss_roll_pose']:.4f}"
+            f"roll_pose={train_metrics['loss_roll_pose']:.4f} | "
+            f"roll_recon={train_metrics['loss_roll_recon']:.4f}"
         )
 
         print(
@@ -513,20 +565,21 @@ def main() -> None:
             f"recon={val_metrics['loss_recon']:.4f} | "
             f"pose={val_metrics['loss_pose']:.4f} | "
             f"roll_lat={val_metrics['loss_roll_latent']:.4f} | "
-            f"roll_pose={val_metrics['loss_roll_pose']:.4f}"
+            f"roll_pose={val_metrics['loss_roll_pose']:.4f} | "
+            f"roll_recon={val_metrics['loss_roll_recon']:.4f}"
         )
 
-        # save latest
-        if cfg.save_every_epoch:
-            save_checkpoint(
-                model=model,
-                optimizer=optimizer,
-                epoch=epoch,
-                cfg=cfg,
-                save_path=os.path.join(cfg.save_dir, f"epoch_{epoch:03d}.pt"),
-            )
+        # Always save latest only
+        save_checkpoint(
+            model=model,
+            optimizer=optimizer,
+            epoch=epoch,
+            cfg=cfg,
+            save_path=os.path.join(cfg.save_dir, "last_model.pt"),
+            extra={"best_val_loss": best_val_loss},
+        )
 
-        # save best
+        # Save best only
         if val_metrics["loss_total"] < best_val_loss:
             best_val_loss = val_metrics["loss_total"]
             save_checkpoint(
@@ -535,6 +588,7 @@ def main() -> None:
                 epoch=epoch,
                 cfg=cfg,
                 save_path=os.path.join(cfg.save_dir, "best_model.pt"),
+                extra={"best_val_loss": best_val_loss},
             )
             print(f"  Saved new best model with val loss {best_val_loss:.4f}")
 
