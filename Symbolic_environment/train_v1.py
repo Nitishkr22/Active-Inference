@@ -29,7 +29,7 @@ class TrainConfig:
     # Dataset / loaders
     # Defaults chosen for RTX 3080-style training
     # --------------------------------------------------------
-    dataset_path: str = "../../dataset/train_dataset__v6.npz"
+    dataset_path: str = "../../dataset/train_dataset_v7.npz"
     val_fraction: float = 0.1
 
     batch_size: int = 32
@@ -575,7 +575,7 @@ def main() -> None:
             optimizer=optimizer,
             epoch=epoch,
             cfg=cfg,
-            save_path=os.path.join(cfg.save_dir, "last_model.pt"),
+            save_path=os.path.join(cfg.save_dir, "last_model_v7.pt"),
             extra={"best_val_loss": best_val_loss},
         )
 
@@ -587,7 +587,7 @@ def main() -> None:
                 optimizer=optimizer,
                 epoch=epoch,
                 cfg=cfg,
-                save_path=os.path.join(cfg.save_dir, "best_model.pt"),
+                save_path=os.path.join(cfg.save_dir, "best_model_v7.pt"),
                 extra={"best_val_loss": best_val_loss},
             )
             print(f"  Saved new best model with val loss {best_val_loss:.4f}")
