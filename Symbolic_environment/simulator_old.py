@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass  # used for Pose and StepResult
 from typing import List, Optional, Tuple, Dict, Set
 import math
 import random
-from collections import deque
+from collections import deque  # used for BFS in reachability and shortest path BFS: breadth-first search
 
 import numpy as np
 
@@ -18,7 +18,7 @@ import numpy as np
 HEADINGS = ["N", "E", "S", "W"]
 HEADING_TO_IDX = {h: i for i, h in enumerate(HEADINGS)}
 
-ACTION_NAMES = ["forward", "turn_left", "turn_right", "stay"]
+ACTION_NAMES = ["forward", "backward", "turn_left", "turn_right"]
 ACTION_TO_IDX = {a: i for i, a in enumerate(ACTION_NAMES)}
 
 
@@ -35,7 +35,7 @@ class Pose:
 
 @dataclass
 class StepResult:
-    obs: np.ndarray                  # [H, W], float32 in [0, 1]
+    obs: np.ndarray
     reward: float
     done: bool
     info: Dict
@@ -52,15 +52,15 @@ class TinyIndoorEnv:
       - traversable symbols: ., P
       - optional goal stored internally but NOT rendered into observations
 
-    First-person renderer:
-      - grayscale image
-      - simple ray-cast style wall slices
-      - different symbols produce different brightness/patterns
-      - floor patches influence appearance near the lower image region
+    Actions:
+      - forward
+      - backward
+      - turn_left
+      - turn_right
 
     Important:
       - Goal never appears in rendered first-person observations.
-      - Map is designed so all traversable cells belong to one connected region.
+      - Map is fully connected over traversable cells.
       - For dataset generation, use reset(use_goal=False).
     """
 
@@ -76,8 +76,8 @@ class TinyIndoorEnv:
         collision_penalty: float = -0.02,
         seed: Optional[int] = None,
     ) -> None:
-        self.rng = random.Random(seed)
-        self.np_rng = np.random.default_rng(seed)
+        self.rng = random.Random(seed)  # for internal logic like sampling start/goal
+        self.np_rng = np.random.default_rng(seed) # for rendering noise
 
         self.obs_height = obs_height
         self.obs_width = obs_width
@@ -98,15 +98,14 @@ class TinyIndoorEnv:
         self.blocking_symbols = {"#", "A", "B", "C", "L", "M"}
         self.traversable_symbols = {".", "P"}
 
-        self._validate_grid()
+        self._validate_grid() # check that only allowed symbols are present
 
         self.free_cells = self._find_free_cells()
         if len(self.free_cells) == 0:
             raise ValueError("No traversable cells found in the map.")
 
-        self._validate_connected_traversable_space()
+        self._validate_connected_traversable_space() # ensure all traversable cells are reachable from each other
 
-        # Internal state
         self.pose: Optional[Pose] = None
         self.goal_pos: Optional[Tuple[int, int]] = None
         self.use_goal: bool = False
@@ -122,21 +121,22 @@ class TinyIndoorEnv:
         start_pose: Optional[Pose] = None,
         goal_pos: Optional[Tuple[int, int]] = None,
         min_goal_dist: int = 3,
-        use_goal: bool = False,
+        use_goal: bool = True,
     ) -> Tuple[np.ndarray, Dict]:
         """
         Reset environment.
 
         Args:
-            start_pose: Optional fixed start pose.
-            goal_pos: Optional fixed goal position.
-            min_goal_dist: Minimum Manhattan distance between start and goal
-                           when sampled.
-            use_goal: If False, no goal is used and no terminal goal logic is active.
+            start_pose: optional fixed start pose
+            goal_pos: optional fixed goal position
+            min_goal_dist: minimum Manhattan distance between start and goal
+            use_goal: if False, goal logic is disabled
 
         Returns:
             obs, info
         """
+
+        # If start_pose is not provided, sample a random one from free cells and random heading.
         if start_pose is None:
             start_row, start_col = self.rng.choice(self.free_cells)
             start_heading = self.rng.choice(HEADINGS)
@@ -174,13 +174,7 @@ class TinyIndoorEnv:
 
     def step(self, action: int | str) -> StepResult:
         """
-        Apply action and return next observation.
-
-        Actions:
-            0 / "forward"
-            1 / "turn_left"
-            2 / "turn_right"
-            3 / "stay"
+        Apply one action and return the next observation.
         """
         if self.pose is None:
             raise RuntimeError("Environment not reset. Call reset() first.")
@@ -199,15 +193,17 @@ class TinyIndoorEnv:
         elif action_name == "turn_right":
             self.pose.heading = HEADINGS[(HEADING_TO_IDX[self.pose.heading] + 1) % 4]
 
-        elif action_name == "stay":
-            # Agent remains in same pose by design
-            pass
-
         elif action_name == "forward":
-            dr, dc = self._heading_to_delta(self.pose.heading)
-            nr, nc = self.pose.row + dr, self.pose.col + dc
+            nr, nc = self._next_cell(self.pose.row, self.pose.col, self.pose.heading)
+            if not self._in_bounds(nr, nc) or self._is_blocking(nr, nc):
+                collision = True
+                reward += self.collision_penalty
+            else:
+                self.pose.row = nr
+                self.pose.col = nc
 
-            # Collision case: agent stays in same position
+        elif action_name == "backward":
+            nr, nc = self._prev_cell(self.pose.row, self.pose.col, self.pose.heading)
             if not self._in_bounds(nr, nc) or self._is_blocking(nr, nc):
                 collision = True
                 reward += self.collision_penalty
@@ -233,9 +229,6 @@ class TinyIndoorEnv:
     def render_first_person(self) -> np.ndarray:
         """
         Render a first-person grayscale observation.
-
-        Returns:
-            obs: float32 array of shape [obs_height, obs_width], values in [0, 1]
         """
         if self.pose is None:
             raise RuntimeError("Environment not reset. Call reset() first.")
@@ -245,7 +238,6 @@ class TinyIndoorEnv:
 
         img = np.zeros((H, W), dtype=np.float32)
 
-        # Ceiling and floor base
         img[: H // 2, :] = 0.02
         img[H // 2 :, :] = 0.08
 
@@ -294,10 +286,7 @@ class TinyIndoorEnv:
 
     def render_topdown_ascii(self, show_goal: bool = True) -> str:
         """
-        Debug text rendering of the map with current agent pose.
-
-        show_goal only affects ASCII visualization.
-        It never affects first-person observations.
+        Render the map as ASCII for debugging.
         """
         if self.pose is None:
             raise RuntimeError("Environment not reset. Call reset() first.")
@@ -524,6 +513,14 @@ class TinyIndoorEnv:
             return 0, -1
         raise ValueError(f"Invalid heading: {heading}")
 
+    def _next_cell(self, row: int, col: int, heading: str) -> Tuple[int, int]:
+        dr, dc = self._heading_to_delta(heading)
+        return row + dr, col + dc
+
+    def _prev_cell(self, row: int, col: int, heading: str) -> Tuple[int, int]:
+        dr, dc = self._heading_to_delta(heading)
+        return row - dr, col - dc
+
     def _heading_to_angle_deg(self, heading: str) -> float:
         if heading == "E":
             return 0.0
@@ -710,13 +707,12 @@ class TinyIndoorEnv:
 if __name__ == "__main__":
     env = TinyIndoorEnv(seed=42)
 
-    print("=== Goal-free reset for dataset-style rollout ===")
     obs, info = env.reset(use_goal=False)
     print(env.render_topdown_ascii(show_goal=True))
     print("info:", info)
-    print("obs:", obs.shape, obs.min(), obs.max())
+    print("obs stats:", obs.shape, obs.min(), obs.max())
 
-    demo_actions = ["forward", "forward", "turn_left", "stay", "forward"]
+    demo_actions = ["forward", "backward", "turn_left", "forward", "turn_right"]
 
     for i, action in enumerate(demo_actions, start=1):
         result = env.step(action)

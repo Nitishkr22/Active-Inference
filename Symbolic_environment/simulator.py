@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass  # used for Pose and StepResult
+from dataclasses import dataclass
 from typing import List, Optional, Tuple, Dict, Set
 import math
 import random
-from collections import deque  # used for BFS in reachability and shortest path BFS: breadth-first search
+from collections import deque
 
 import numpy as np
 
@@ -30,7 +30,7 @@ ACTION_TO_IDX = {a: i for i, a in enumerate(ACTION_NAMES)}
 class Pose:
     row: int
     col: int
-    heading: str  # one of {"N", "E", "S", "W"}
+    heading: str
 
 
 @dataclass
@@ -62,6 +62,14 @@ class TinyIndoorEnv:
       - Goal never appears in rendered first-person observations.
       - Map is fully connected over traversable cells.
       - For dataset generation, use reset(use_goal=False).
+
+    Patch design:
+      - Patches are fixed in the world
+      - Patches are attached to specific wall cells
+      - Patches are rendered only in first-person observations
+      - Patches are NOT shown in ASCII
+      - Patch size changes naturally with distance because they are drawn
+        inside wall columns whose height already depends on ray distance
     """
 
     def __init__(
@@ -76,8 +84,8 @@ class TinyIndoorEnv:
         collision_penalty: float = -0.02,
         seed: Optional[int] = None,
     ) -> None:
-        self.rng = random.Random(seed)  # for internal logic like sampling start/goal
-        self.np_rng = np.random.default_rng(seed) # for rendering noise
+        self.rng = random.Random(seed)
+        self.np_rng = np.random.default_rng(seed)
 
         self.obs_height = obs_height
         self.obs_width = obs_width
@@ -98,13 +106,22 @@ class TinyIndoorEnv:
         self.blocking_symbols = {"#", "A", "B", "C", "L", "M"}
         self.traversable_symbols = {".", "P"}
 
-        self._validate_grid() # check that only allowed symbols are present
+        self._validate_grid()
 
         self.free_cells = self._find_free_cells()
         if len(self.free_cells) == 0:
             raise ValueError("No traversable cells found in the map.")
 
-        self._validate_connected_traversable_space() # ensure all traversable cells are reachable from each other
+        self._validate_connected_traversable_space()
+
+        # ----------------------------------------------------
+        # Fixed wall patches in world coordinates.
+        # These do not change with motion.
+        #
+        # Keys: (row, col) of wall cells
+        # Values: patch type
+        # ----------------------------------------------------
+        self.wall_patches = self._build_wall_patches()
 
         self.pose: Optional[Pose] = None
         self.goal_pos: Optional[Tuple[int, int]] = None
@@ -123,20 +140,6 @@ class TinyIndoorEnv:
         min_goal_dist: int = 3,
         use_goal: bool = True,
     ) -> Tuple[np.ndarray, Dict]:
-        """
-        Reset environment.
-
-        Args:
-            start_pose: optional fixed start pose
-            goal_pos: optional fixed goal position
-            min_goal_dist: minimum Manhattan distance between start and goal
-            use_goal: if False, goal logic is disabled
-
-        Returns:
-            obs, info
-        """
-
-        # If start_pose is not provided, sample a random one from free cells and random heading.
         if start_pose is None:
             start_row, start_col = self.rng.choice(self.free_cells)
             start_heading = self.rng.choice(HEADINGS)
@@ -173,9 +176,6 @@ class TinyIndoorEnv:
         return obs, info
 
     def step(self, action: int | str) -> StepResult:
-        """
-        Apply one action and return the next observation.
-        """
         if self.pose is None:
             raise RuntimeError("Environment not reset. Call reset() first.")
 
@@ -238,7 +238,9 @@ class TinyIndoorEnv:
 
         img = np.zeros((H, W), dtype=np.float32)
 
+        # sky / ceiling
         img[: H // 2, :] = 0.02
+        # floor base
         img[H // 2 :, :] = 0.08
 
         base_angle = self._heading_to_angle_deg(self.pose.heading)
@@ -285,9 +287,6 @@ class TinyIndoorEnv:
         return img.astype(np.float32)
 
     def render_topdown_ascii(self, show_goal: bool = True) -> str:
-        """
-        Render the map as ASCII for debugging.
-        """
         if self.pose is None:
             raise RuntimeError("Environment not reset. Call reset() first.")
 
@@ -488,6 +487,54 @@ class TinyIndoorEnv:
         return nbrs
 
     # ========================================================
+    # Fixed wall patch helpers
+    # ========================================================
+
+    def _build_wall_patches(self) -> Dict[Tuple[int, int], str]:
+        """
+        Fixed patches attached to wall cells.
+
+        These are chosen near ambiguous corridors/corners.
+        They stay fixed in the world and therefore move naturally
+        in the image as the agent moves.
+
+        Types:
+          - "corner"
+          - "center"
+          - "stripe"
+        """
+        patch_dict: Dict[Tuple[int, int], str] = {
+            # upper horizontal corridor / left-right ambiguity
+            (0, 8): "corner",
+            (2, 8): "stripe",
+
+            # left-middle region near row-5 ambiguity
+            (4, 2): "corner",
+            (5, 4): "center",
+            (6, 2): "stripe",
+
+            # right-middle corridor
+            (4, 6): "corner",
+            (6, 6): "stripe",
+
+            # lower-right / lower corridor cues
+            (8, 5): "center",
+            (9, 7): "corner",
+
+            # lower-left cues
+            (9, 1): "corner",
+            (7, 4): "center",
+        }
+
+        # keep only valid blocking cells
+        clean_patch_dict: Dict[Tuple[int, int], str] = {}
+        for (r, c), patch_type in patch_dict.items():
+            if self._in_bounds(r, c) and self._is_blocking(r, c):
+                clean_patch_dict[(r, c)] = patch_type
+
+        return clean_patch_dict
+
+    # ========================================================
     # Internal dynamics helpers
     # ========================================================
 
@@ -658,6 +705,31 @@ class TinyIndoorEnv:
 
         angle_mod = 0.01 * math.sin(math.radians(ray_angle_deg * 3.0))
         col += angle_mod
+
+        # --------------------------------------------------
+        # FIXED WALL PATCHES (PHYSICALLY CONSISTENT)
+        # --------------------------------------------------
+        patch_type = self.wall_patches.get((hit_row, hit_col), None)
+
+        if patch_type is not None:
+            h = len(col)
+
+            # closer wall => taller column => naturally bigger patch
+            patch_size = max(2, int(h * 0.15))
+            center = h // 2
+
+            if patch_type == "corner":
+                # small bright square near top part
+                col[:patch_size] += 0.25
+
+            elif patch_type == "center":
+                y0 = max(0, center - patch_size // 2)
+                y1 = min(h, center + patch_size // 2)
+                col[y0:y1] += 0.25
+
+            elif patch_type == "stripe":
+                for i in range(0, h, 6):
+                    col[i:i + 2] += 0.15
 
         return np.clip(col, 0.0, 1.0).astype(np.float32)
 
