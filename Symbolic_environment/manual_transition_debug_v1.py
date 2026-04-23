@@ -18,7 +18,7 @@ from simulator import TinyIndoorEnv, Pose, ACTION_NAMES
 
 @dataclass
 class ManualTransitionDebugConfig:
-    checkpoint_path: str = "./checkpoints_v1/best_model.pt"
+    checkpoint_path: str = "./checkpoints_v2/best_model.pt"
 
     start_row: int = 1
     start_col: int = 5
@@ -160,7 +160,9 @@ def generate_history_and_rollout_sequences(
         rollout_cols.append(int(result.info["col"]))
         rollout_headings.append(int(result.info["heading_idx"]))
 
-    observations = torch.tensor(observations, dtype=torch.float32).unsqueeze(1)      # [T_hist,1,H,W]
+    # observations = torch.tensor(observations, dtype=torch.float32).unsqueeze(1)      # [T_hist,1,H,W]
+    import numpy as np
+    observations = torch.from_numpy(np.array(observations, dtype=np.float32)).unsqueeze(1)
     history_actions = torch.tensor(history_actions, dtype=torch.long)                 # [T_hist-1]
     rows = torch.tensor(rows, dtype=torch.long)
     cols = torch.tensor(cols, dtype=torch.long)
@@ -287,7 +289,7 @@ def debug_transition(
 
 def main() -> None:
     cfg = ManualTransitionDebugConfig(
-        checkpoint_path="./checkpoints_v1/best_model.pt",
+        checkpoint_path="./checkpoints_v2/best_model.pt",
         start_row=1,
         start_col=5,
         start_heading="W",
@@ -297,7 +299,7 @@ def main() -> None:
         ],
 
         rollout_action_indices=[
-            0,0,2,0,0,0,0,2,0,0
+            0,0,2,0,0,0,0,2,0,0,0,0,2,0,0,3
             # 0, 3, 0, 0, 0, 0, 3, 0, 3, 0
         ],
 

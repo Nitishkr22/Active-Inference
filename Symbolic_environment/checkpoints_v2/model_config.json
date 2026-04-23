@@ -1,0 +1,20 @@
+{
+  "obs_channels": 1,
+  "obs_height": 64,
+  "obs_width": 64,
+  "num_actions": 4,
+  "num_row_classes": 9,
+  "num_col_classes": 9,
+  "num_heading_classes": 4,
+  "action_emb_dim": 16,
+  "encoder_feat_dim": 128,
+  "gru_hidden_dim": 256,
+  "attn_num_heads": 4,
+  "attn_num_layers": 2,
+  "attn_ff_dim": 512,
+  "attn_dropout": 0.1,
+  "latent_dim": 128,
+  "decoder_base_channels": 128,
+  "collision_head_hidden_dim": 128,
+  "max_seq_len": 128
+}

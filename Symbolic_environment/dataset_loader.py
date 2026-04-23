@@ -244,6 +244,27 @@ def create_dataloaders(
 
     return full_dataset, train_loader, val_loader
 
+def build_dataloaders(
+    cfg: LoaderConfig,
+) -> Tuple[SequenceWorldModelDataset, DataLoader, DataLoader]:
+    """
+    Returns:
+      full_dataset, train_loader, val_loader
+    """
+    full_dataset, train_dataset, val_dataset = create_train_val_datasets(cfg)
+
+    train_loader = DataLoader(
+        train_dataset,
+        **_build_loader_kwargs(cfg, is_train=True),
+    )
+
+    val_loader = DataLoader(
+        val_dataset,
+        **_build_loader_kwargs(cfg, is_train=False),
+    )
+
+    return full_dataset, train_loader, val_loader
+
 
 # ============================================================
 # Debug / sanity test
@@ -257,7 +278,7 @@ def debug_print_batch(batch: Dict[str, torch.Tensor]) -> None:
 
 if __name__ == "__main__":
     # Update this path before running directly
-    dataset_path = "../../dataset/train_dataset__v6.npz"
+    dataset_path = "../../dataset/train_dataset_v7.npz"
 
     # These defaults are now more training-oriented.
     # Final values should still be tuned in the training script
@@ -276,7 +297,7 @@ if __name__ == "__main__":
         drop_last_val=False,
     )
 
-    full_dataset, train_loader, val_loader = create_dataloaders(cfg)
+    full_dataset, train_loader, val_loader = build_dataloaders(cfg)
 
     print("Dataset summary:")
     summary = full_dataset.summary()

@@ -64,6 +64,12 @@ class TrainConfig:
     w_roll_recon: float = 1.0
 
     # --------------------------------------------------------
+    # Collision loss weight
+    w_collision: float = 0.5
+    w_roll_collision: float = 0.75
+    w_roll_collision_stay: float = 0.5
+
+    # --------------------------------------------------------
     # Logging / saving
     # --------------------------------------------------------
     print_every: int = 50
@@ -171,6 +177,7 @@ def sample_rollout_start_and_targets(
     rows: torch.Tensor,
     cols: torch.Tensor,
     headings: torch.Tensor,
+    collisions: torch.Tensor,
     rollout_start_t_min: int,
     rollout_horizon: int,
 ) -> Dict[str, torch.Tensor]:
@@ -218,6 +225,7 @@ def sample_rollout_start_and_targets(
     row_target_list = []
     col_target_list = []
     heading_target_list = []
+    collision_target_list = []
 
     for b in range(B):
         t = int(t0[b].item())
@@ -231,6 +239,7 @@ def sample_rollout_start_and_targets(
         row_target_list.append(rows[b, t + 1:t + 1 + K])
         col_target_list.append(cols[b, t + 1:t + 1 + K])
         heading_target_list.append(headings[b, t + 1:t + 1 + K])
+        collision_target_list.append(collisions[b, t:t + K])   # [K]
 
     return {
         "z_start": torch.stack(z_start_list, dim=0),
@@ -241,6 +250,7 @@ def sample_rollout_start_and_targets(
         "row_target": torch.stack(row_target_list, dim=0),
         "col_target": torch.stack(col_target_list, dim=0),
         "heading_target": torch.stack(heading_target_list, dim=0),
+        "collision_target": torch.stack(collision_target_list, dim=0),
     }
 
 
@@ -254,6 +264,7 @@ def compute_batch_losses(
     rows = batch["rows"]                   # [B,T]
     cols = batch["cols"]                   # [B,T]
     headings = batch["headings"]           # [B,T]
+    collisions = batch["collisions"].long()   # [B, T-1]
 
     # --------------------------------------------------------
     # Filtering pass on actual observations
@@ -266,6 +277,7 @@ def compute_batch_losses(
     row_logits_seq = filt["row_logits_seq"]                # [B,T,R]
     col_logits_seq = filt["col_logits_seq"]                # [B,T,C]
     heading_logits_seq = filt["heading_logits_seq"]        # [B,T,Hd]
+    collision_logits_seq = filt["collision_logits_seq"]    # [B,T-1,2]
 
     # --------------------------------------------------------
     # Reconstruction loss on filtered states
@@ -285,6 +297,14 @@ def compute_batch_losses(
     )
 
     # --------------------------------------------------------
+    # Collision loss on filtered states
+    # --------------------------------------------------------
+    collision_loss = compute_collision_loss(
+        collision_logits=collision_logits_seq,
+        collision_targets=collisions,
+    )
+
+    # --------------------------------------------------------
     # Rollout targets
     # --------------------------------------------------------
     rollout_targets = sample_rollout_start_and_targets(
@@ -295,6 +315,7 @@ def compute_batch_losses(
         rows=rows,
         cols=cols,
         headings=headings,
+        collisions=collisions,
         rollout_start_t_min=cfg.rollout_start_t_min,
         rollout_horizon=cfg.rollout_horizon,
     )
@@ -310,12 +331,14 @@ def compute_batch_losses(
     row_logits_roll = roll["row_logits_roll"]              # [B,K,R]
     col_logits_roll = roll["col_logits_roll"]              # [B,K,C]
     heading_logits_roll = roll["heading_logits_roll"]      # [B,K,Hd]
+    collision_logits_roll = roll["collision_logits_roll"]  # [B,K,2]
 
     z_target = rollout_targets["z_target"]                 # [B,K,Z]
     obs_target = rollout_targets["obs_target"]             # [B,K,1,H,W]
     row_target = rollout_targets["row_target"]             # [B,K]
     col_target = rollout_targets["col_target"]             # [B,K]
     heading_target = rollout_targets["heading_target"]     # [B,K]
+    collision_target = rollout_targets["collision_target"].long()  # [B,K]
 
     # --------------------------------------------------------
     # Rollout losses
@@ -329,6 +352,19 @@ def compute_batch_losses(
         row_target,
         col_target,
         heading_target,
+    )
+    roll_collision_loss = compute_collision_loss(
+        collision_logits=collision_logits_roll,
+        collision_targets=collision_target,
+    )
+
+    z_start_expanded = rollout_targets["z_start"].unsqueeze(1)      # [B,1,Z]
+    z_prev_true = torch.cat([z_start_expanded, z_target[:, :-1, :]], dim=1)  # [B,K,Z]
+
+    roll_collision_stay_loss = masked_latent_stay_loss(
+        z_pred_next=z_roll,
+        z_should_stay=z_prev_true,
+        collision_targets=collision_target,
     )
 
     # Important fix:
@@ -344,7 +380,10 @@ def compute_batch_losses(
         cfg.w_pose * pose_loss +
         cfg.w_roll_latent * roll_latent_loss +
         cfg.w_roll_pose * roll_pose_loss +
-        cfg.w_roll_recon * roll_recon_loss
+        cfg.w_roll_recon * roll_recon_loss +
+        cfg.w_collision * collision_loss +
+        cfg.w_roll_collision * roll_collision_loss +
+        cfg.w_roll_collision_stay * roll_collision_stay_loss
     )
 
     metrics = {
@@ -360,9 +399,41 @@ def compute_batch_losses(
         "loss_roll_row": float(roll_pose_parts["row_loss"].item()),
         "loss_roll_col": float(roll_pose_parts["col_loss"].item()),
         "loss_roll_heading": float(roll_pose_parts["heading_loss"].item()),
+        "loss_collision": float(collision_loss.detach().item()),
+        "loss_roll_collision": float(roll_collision_loss.detach().item()),
+        "loss_roll_collision_stay": float(roll_collision_stay_loss.detach().item()),
     }
 
     return total_loss, metrics
+
+def compute_collision_loss(
+    collision_logits: torch.Tensor,   # [B,T,2] or [B,K,2]
+    collision_targets: torch.Tensor,  # [B,T] or [B,K], values 0/1
+) -> torch.Tensor:
+    B, T, C = collision_logits.shape
+    assert C == 2
+    return F.cross_entropy(
+        collision_logits.reshape(B * T, C),
+        collision_targets.reshape(B * T).long(),
+    )
+
+
+def masked_latent_stay_loss(
+    z_pred_next: torch.Tensor,      # [B,K,Z]
+    z_should_stay: torch.Tensor,    # [B,K,Z]
+    collision_targets: torch.Tensor # [B,K], 0/1
+) -> torch.Tensor:
+    """
+    If collision_targets[b,k] == 1, then predicted next latent should stay
+    close to the current latent instead of drifting.
+    """
+    mask = collision_targets.float()  # [B,K]
+    if mask.sum().item() < 1:
+        return z_pred_next.new_tensor(0.0)
+
+    per_step_mse = ((z_pred_next - z_should_stay) ** 2).mean(dim=-1)  # [B,K]
+    loss = (per_step_mse * mask).sum() / mask.sum()
+    return loss
 
 
 # ============================================================
@@ -393,7 +464,7 @@ def run_epoch(
             optimizer.zero_grad(set_to_none=True)
 
         with torch.set_grad_enabled(train):
-            with torch.cuda.amp.autocast(enabled=(cfg.use_amp and device.type == "cuda")):
+            with torch.amp.autocast(device_type="cuda",enabled=(cfg.use_amp and device.type == "cuda"),):
                 loss, metrics = compute_batch_losses(model, batch, cfg)
 
             if train:
@@ -422,7 +493,10 @@ def run_epoch(
                 f"pose={metrics['loss_pose']:.4f} | "
                 f"roll_lat={metrics['loss_roll_latent']:.4f} | "
                 f"roll_pose={metrics['loss_roll_pose']:.4f} | "
-                f"roll_recon={metrics['loss_roll_recon']:.4f}"
+                f"roll_recon={metrics['loss_roll_recon']:.4f} | "
+                f"coll={metrics['loss_collision']:.4f} | "
+                f"roll_coll={metrics['loss_roll_collision']:.4f} | "
+                f"roll_stay={metrics['loss_roll_collision_stay']:.4f}"
             )
 
     avg_metrics = {k: v / max(num_batches, 1) for k, v in total_metrics.items()}
@@ -518,7 +592,7 @@ def main() -> None:
 
     scaler = None
     if cfg.use_amp and device.type == "cuda":
-        scaler = torch.cuda.amp.GradScaler()
+        scaler = torch.amp.GradScaler("cuda") if (cfg.use_amp and device.type == "cuda") else None
 
     os.makedirs(cfg.save_dir, exist_ok=True)
     best_val_loss = math.inf
@@ -556,7 +630,10 @@ def main() -> None:
             f"pose={train_metrics['loss_pose']:.4f} | "
             f"roll_lat={train_metrics['loss_roll_latent']:.4f} | "
             f"roll_pose={train_metrics['loss_roll_pose']:.4f} | "
-            f"roll_recon={train_metrics['loss_roll_recon']:.4f}"
+            f"roll_recon={train_metrics['loss_roll_recon']:.4f} | "
+            f"coll={train_metrics['loss_collision']:.4f} | "
+            f"roll_coll={train_metrics['loss_roll_collision']:.4f} | "
+            f"roll_stay={train_metrics['loss_roll_collision_stay']:.4f}"
         )
 
         print(
@@ -566,7 +643,10 @@ def main() -> None:
             f"pose={val_metrics['loss_pose']:.4f} | "
             f"roll_lat={val_metrics['loss_roll_latent']:.4f} | "
             f"roll_pose={val_metrics['loss_roll_pose']:.4f} | "
-            f"roll_recon={val_metrics['loss_roll_recon']:.4f}"
+            f"roll_recon={val_metrics['loss_roll_recon']:.4f} | "
+            f"coll={val_metrics['loss_collision']:.4f} | "
+            f"roll_coll={val_metrics['loss_roll_collision']:.4f} | "
+            f"roll_stay={val_metrics['loss_roll_collision_stay']:.4f}"
         )
 
         # Always save latest only

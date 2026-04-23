@@ -20,8 +20,8 @@ from model_v1 import ModelV1Config, WorldModelV1
 
 @dataclass
 class EvalConfig:
-    dataset_path: str = "../../dataset/train_dataset__v6.npz"
-    checkpoint_path: str = "./checkpoints_v1/best_model.pt"
+    dataset_path: str = "../../dataset/train_dataset_v7.npz"
+    checkpoint_path: str = "./checkpoints_v1/best_model_v7.pt"
     batch_size: int = 64
     num_workers: int = 4
     pin_memory: bool = True

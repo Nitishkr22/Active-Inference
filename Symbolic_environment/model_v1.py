@@ -33,6 +33,8 @@ class ModelV1Config:
 
     decoder_base_channels: int = 128
 
+    collision_head_hidden_dim: int = 128
+
 
 # ============================================================
 # CNN Encoder
@@ -299,6 +301,21 @@ class WorldModelV1(nn.Module):
         self.pose_heads = PoseHeads(cfg)
         self.transition_model = RecurrentTransitionModel(cfg)
 
+        # ----------------------------------------------------
+        # Collision head
+        # Predicts whether the action from current state causes collision
+        # Inputs: current hidden h_t, current latent z_t, action embedding
+        # Output: 2 logits => {no_collision, collision}
+        # ----------------------------------------------------
+        self.collision_head = nn.Sequential(
+            nn.Linear(
+                cfg.gru_hidden_dim + cfg.latent_dim + cfg.action_emb_dim,
+                cfg.collision_head_hidden_dim,
+            ),
+            nn.ReLU(inplace=True),
+            nn.Linear(cfg.collision_head_hidden_dim, 2),
+        )
+
     # --------------------------------------------------------
     # Helper: encode observation sequence
     # --------------------------------------------------------
@@ -386,6 +403,31 @@ class WorldModelV1(nn.Module):
         col_logits_seq = pose_dict["col_logits"].view(B, T, -1)
         heading_logits_seq = pose_dict["heading_logits"].view(B, T, -1)
 
+        # ----------------------------------------------------
+        # Collision prediction on filtered sequence
+        # Predict collision for action a_t using state at time t
+        # ----------------------------------------------------
+        B, T, _ = z_seq.shape
+        if actions.shape[1] != T - 1:
+            raise ValueError(
+                f"Expected actions shape [B, T-1], got {actions.shape} for T={T}"
+            )
+
+        h_for_collision = h_seq[:, :-1, :]   # [B, T-1, H]
+        z_for_collision = z_seq[:, :-1, :]   # [B, T-1, Z]
+        a_for_collision = actions            # [B, T-1]
+
+        collision_logits_list = []
+        for t in range(T - 1):
+            logits_t = self.predict_collision_logits(
+                h=h_for_collision[:, t, :],
+                z=z_for_collision[:, t, :],
+                actions=a_for_collision[:, t],
+            )  # [B, 2]
+            collision_logits_list.append(logits_t)
+
+        collision_logits_seq = torch.stack(collision_logits_list, dim=1)  # [B, T-1, 2]
+
         return {
             "feat_seq": feat_seq,
             "h_seq": h_seq,
@@ -395,6 +437,7 @@ class WorldModelV1(nn.Module):
             "row_logits_seq": row_logits_seq,
             "col_logits_seq": col_logits_seq,
             "heading_logits_seq": heading_logits_seq,
+            "collision_logits_seq": collision_logits_seq,
         }
 
     # --------------------------------------------------------
@@ -434,10 +477,18 @@ class WorldModelV1(nn.Module):
         col_roll = []
         heading_roll = []
         recon_roll = []
+        collision_logits_roll_list = []
 
         for k in range(K):
             a_t = action_seq[:, k]                              # [B]
             a_emb = self.action_embedding(a_t)                  # [B,A]
+
+            collision_logits_t = self.predict_collision_logits(
+                h=h_t,
+                z=z_t,
+                actions=a_t,
+            )  # [B, 2]
+            collision_logits_roll_list.append(collision_logits_t)
 
             h_t = self.transition_model.forward_step(z_t, a_emb, h_t)   # [B,H]
             z_t = self.hidden_to_latent(h_t)                               # [B,Z]
@@ -458,6 +509,7 @@ class WorldModelV1(nn.Module):
         row_roll = torch.stack(row_roll, dim=1)                 # [B,K,R]
         col_roll = torch.stack(col_roll, dim=1)                 # [B,K,C]
         heading_roll = torch.stack(heading_roll, dim=1)         # [B,K,Hd]
+        collision_logits_roll = torch.stack(collision_logits_roll_list, dim=1)  # [B, K, 2]
 
         return {
             "h_roll": h_roll,
@@ -466,6 +518,7 @@ class WorldModelV1(nn.Module):
             "row_logits_roll": row_roll,
             "col_logits_roll": col_roll,
             "heading_logits_roll": heading_roll,
+            "collision_logits_roll": collision_logits_roll,
         }
 
     # --------------------------------------------------------
@@ -481,6 +534,25 @@ class WorldModelV1(nn.Module):
         Default forward = filtering pass on actual observations.
         """
         return self.forward_filter(observations, actions, h0=h0)
+
+    def predict_collision_logits(
+        self,
+        h: torch.Tensor,         # [B, H]
+        z: torch.Tensor,         # [B, Z]
+        actions: torch.Tensor,   # [B]
+    ) -> torch.Tensor:
+        """
+        Predict whether taking `actions` from current state causes collision.
+
+        Returns:
+            logits: [B, 2]
+        """
+        a_emb = self.action_embedding(actions)  # [B, A]
+        x = torch.cat([h, z, a_emb], dim=-1)
+        logits = self.collision_head(x)
+        return logits
+
+    
 
 
 # ============================================================
