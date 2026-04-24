@@ -26,8 +26,6 @@ OUTPUT_DIR = "./debug_v3_outputs"
 
 START_POSE = Pose(row=1, col=5, heading="W")
 
-# Keep these customizable. This history/rollout pattern is similar to the one
-# that exposed identity drift in V1/V2.
 HISTORY_ACTIONS = [
     0, 0, 2, 0, 0, 0, 0, 2, 0
 ]
