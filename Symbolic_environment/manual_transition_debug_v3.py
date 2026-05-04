@@ -10,11 +10,8 @@ from simulator import TinyIndoorEnv, Pose, HEADINGS
 from model_v3 import ModelV3Config, WorldModelV3
 
 
-# ============================================================
-# User-editable config
-# ============================================================
 
-CHECKPOINT_PATH = "./checkpoints_v3/best_model.pt"
+CHECKPOINT_PATH = "./checkpoints_v32/best_model_v32.pt"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 OUTPUT_DIR = "./debug_v3_outputs"
 
@@ -37,9 +34,6 @@ ROLLOUT_ACTIONS = [
 ]
 
 
-# ============================================================
-# Helpers
-# ============================================================
 
 ACTION_NAMES = ["forward", "backward", "turn_left", "turn_right"]
 

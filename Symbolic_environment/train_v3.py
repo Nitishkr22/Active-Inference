@@ -24,7 +24,7 @@ from model_v3 import ModelV3Config, WorldModelV3
 class TrainV3Config:
     # Data
     dataset_path: str = "../../dataset/train_dataset_v7.npz"
-    val_fraction: float = 0.1
+    val_fraction: float = 0.1 # 10% for validation, 90% for training
     batch_size: int = 32
     num_workers: int = 4
     pin_memory: bool = True
@@ -41,8 +41,8 @@ class TrainV3Config:
     grad_clip_norm: float = 1.0
 
     # Rollout
-    rollout_start_t_min: int = 4
-    rollout_horizon: int = 5
+    rollout_start_t_min: int = 4 #start imagination rollout after at least 4 real history steps
+    rollout_horizon: int = 5 #imagine 5 future steps
 
     # Loss weights
     w_recon: float = 1.0
@@ -283,7 +283,7 @@ def compute_batch_losses(
     headings = batch["headings"]                   # [B,T]
     collisions = batch["collisions"].long()        # [B,T-1]
 
-    filt = model.forward_filter(observations, actions)
+    filt = model.forward_filter(observations, actions) # CNN → GRU → Transformer → factor heads → decoder → collision head
 
     # Filter outputs
     row_logits_seq = filt["row_logits_seq"]

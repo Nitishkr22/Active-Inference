@@ -15,7 +15,7 @@ import torch.nn.functional as F
 @dataclass
 class ModelV3Config:
     # Observation shape
-    obs_channels: int = 1
+    obs_channels: int = 1 # grayscale
     obs_height: int = 64
     obs_width: int = 64
 
@@ -56,7 +56,7 @@ class ConvBlock(nn.Module):
         self.block = nn.Sequential(
             nn.Conv2d(in_ch, out_ch, kernel_size=3, stride=stride, padding=1, bias=False),
             nn.BatchNorm2d(out_ch),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=True), # in-place to save memory, safe here since we don't reuse activations after this block
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -73,10 +73,11 @@ class ResidualConvBlock(nn.Module):
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # since we have not used nn.sequential here so we need to pass x step by step
         residual = x
         x = self.relu(self.bn1(self.conv1(x)))
         x = self.bn2(self.conv2(x))
-        x = self.relu(x + residual)
+        x = self.relu(x + residual) #skip connection
         return x
 
 
@@ -133,19 +134,19 @@ class TemporalAttentionModule(nn.Module):
         super().__init__()
         self.pos_enc = PositionalEncoding(cfg.gru_hidden_dim, cfg.max_seq_len)
         layer = nn.TransformerEncoderLayer(
-            d_model=cfg.gru_hidden_dim,
-            nhead=cfg.attn_num_heads,
-            dim_feedforward=cfg.attn_ff_dim,
+            d_model=cfg.gru_hidden_dim, # feature dimension from GRU = 256
+            nhead=cfg.attn_num_heads, # multi-head attention with 4 heads, so each head has 256/4=64 dimensions
+            dim_feedforward=cfg.attn_ff_dim, #Linear(H → FF) → activation → Linear(FF → H) {inside transformer}
             dropout=cfg.attn_dropout,
             activation="gelu",
-            batch_first=True,
-            norm_first=True,
+            batch_first=True, # use (B,T,H) instead of (T,B,H)
+            norm_first=True, #LayerNorm is applied before attention and FFN.
         )
-        self.encoder = nn.TransformerEncoder(layer, num_layers=cfg.attn_num_layers)
+        self.encoder = nn.TransformerEncoder(layer, num_layers=cfg.attn_num_layers) # stack 2 layers of transformer encoder
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.pos_enc(x)
-        return self.encoder(x)
+        x = self.pos_enc(x) # add time information
+        return self.encoder(x) # apply attention across time steps
 
 
 # ============================================================
@@ -223,9 +224,9 @@ class FactorizedTransitionModelV3(nn.Module):
             + cfg.num_heading_classes
             + cfg.context_dim
             + cfg.action_emb_dim
-        )
+        )# =102
 
-        H = cfg.transition_hidden_dim
+        H = cfg.transition_hidden_dim # 128
 
         self.shared = nn.Sequential(
             nn.Linear(state_dim, H),
@@ -326,7 +327,7 @@ class ObservationDecoderV3(nn.Module):
     def __init__(self, cfg: ModelV3Config) -> None:
         super().__init__()
         in_dim = cfg.num_row_classes + cfg.num_col_classes + cfg.num_heading_classes + cfg.context_dim
-        base = cfg.decoder_base_channels
+        base = cfg.decoder_base_channels # 128
 
         self.fc = nn.Sequential(
             nn.Linear(in_dim, cfg.decoder_hidden_dim),
@@ -437,17 +438,17 @@ class WorldModelV3(nn.Module):
     def encode_observation_sequence(self, obs_seq: torch.Tensor) -> torch.Tensor:
         B, T, C, H, W = obs_seq.shape
         x = obs_seq.view(B * T, C, H, W)
-        feat = self.encoder(x)
-        return feat.view(B, T, -1)
+        feat = self.encoder(x) # input to encoder is [B*T,C,H,W], output is [B*T,F] = [512,1,46,64] -> [512,128]
+        return feat.view(B, T, -1) # getting batch and sequence back [B,T,F] = [32,16,128]
 
     def build_filter_inputs(self, feat_seq: torch.Tensor, actions: torch.Tensor) -> torch.Tensor:
-        B, T, _ = feat_seq.shape
+        B, T, _ = feat_seq.shape # [B,T,F]
         device = feat_seq.device
-        zero_action = torch.zeros(B, 1, dtype=torch.long, device=device)
+        zero_action = torch.zeros(B, 1, dtype=torch.long, device=device) # prepend a dummy action for t=0 since we have no a_{-1}
         prev_actions = torch.cat([zero_action, actions], dim=1)[:, :T]
         prev_a_emb = self.action_embedding(prev_actions)
-        x = torch.cat([feat_seq, prev_a_emb], dim=-1)
-        return self.filter_input_proj(x)
+        x = torch.cat([feat_seq, prev_a_emb], dim=-1)  #[B, T, 128] + [B, T, 16] → [B, T, 144]
+        return self.filter_input_proj(x) # [B, T, 144] → [B, T, 256]
 
     def logits_to_probs(self, logits: torch.Tensor) -> torch.Tensor:
         return torch.softmax(logits, dim=-1)
@@ -473,7 +474,7 @@ class WorldModelV3(nn.Module):
         h_seq = self.temporal_attention(h_seq_gru)                    # [B,T,H]
 
         # factor inference
-        h_flat = h_seq.reshape(B * T, -1)
+        h_flat = h_seq.reshape(B * T, -1) #[B, T, H] → [B*T, H]
         factors_flat = self.factor_heads(h_flat)
 
         row_logits_seq = factors_flat["row_logits"].view(B, T, -1)
@@ -481,16 +482,18 @@ class WorldModelV3(nn.Module):
         heading_logits_seq = factors_flat["heading_logits"].view(B, T, -1)
         context_seq = factors_flat["context"].view(B, T, -1)
 
-        row_probs_seq = self.logits_to_probs(row_logits_seq)
-        col_probs_seq = self.logits_to_probs(col_logits_seq)
-        heading_probs_seq = self.logits_to_probs(heading_logits_seq)
+        # below are the belief distribution of row/col/heading at each time step, 
+        row_probs_seq = self.logits_to_probs(row_logits_seq) #[B,T,R]
+        col_probs_seq = self.logits_to_probs(col_logits_seq) #[B,T,C]
+        heading_probs_seq = self.logits_to_probs(heading_logits_seq) #[B,T,Hd]
 
         # reconstruction from structured state
-        q_row_flat = row_probs_seq.reshape(B * T, -1)
-        q_col_flat = col_probs_seq.reshape(B * T, -1)
-        q_heading_flat = heading_probs_seq.reshape(B * T, -1)
-        context_flat = context_seq.reshape(B * T, -1)
+        q_row_flat = row_probs_seq.reshape(B * T, -1) #[B,T,R] → [B*T,R] 
+        q_col_flat = col_probs_seq.reshape(B * T, -1) #[B,T,C] → [B*T,C]
+        q_heading_flat = heading_probs_seq.reshape(B * T, -1) #[B,T,Hd] → [B*T,Hd]
+        context_flat = context_seq.reshape(B * T, -1) #[B,T,U] → [B*T,U]
 
+        # the decoder receives row,col,heading,context beliefs and reconstruct the image
         recon_flat = self.decoder(q_row_flat, q_col_flat, q_heading_flat, context_flat)
         recon_seq = recon_flat.view(B, T, C, H, W)
 

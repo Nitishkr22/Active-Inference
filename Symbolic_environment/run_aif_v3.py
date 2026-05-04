@@ -22,9 +22,6 @@ from aif_planner_v3 import (
 )
 
 
-# ============================================================
-# Constants
-# ============================================================
 
 ACTION_NAMES = {
     0: "forward",
@@ -34,17 +31,14 @@ ACTION_NAMES = {
 }
 
 
-# ============================================================
-# Config
-# ============================================================
 
 @dataclass
 class RunnerConfig:
-    checkpoint_path: str = "./checkpoints_v3/best_model.pt"
-    model_config_json: str = "./checkpoints_v3/model_config.json"
+    checkpoint_path: str = "./checkpoints_v32/best_model_v32.pt"
+    model_config_json: str = "./checkpoints_v32/model_config.json"
 
-    start_pose: Tuple[int, int, str] = (1,1, "N")
-    goal_pos: Tuple[int, int] = (8,7)
+    start_pose: Tuple[int, int, str] = (8,4, "N")
+    goal_pos: Tuple[int, int] = (6,5)
 
     max_steps: int = 80
     warmup_actions: Tuple[int, ...] = (2, 3, 3, 2)
@@ -369,10 +363,10 @@ def main():
 
         print("=" * 110)
         print(f"Step {step_idx}")
-        print(f"Mode                   : {mode}")
+        # print(f"Mode                   : {mode}")
         print(f"Current TRUE pose      : {recent_true_states[-1]}")
         print(f"Current FILTERED pose  : {pred_pose}")
-        print(f"Belief entropy         : {belief_ent:.4f}")
+        # print(f"Belief entropy         : {belief_ent:.4f}")
         print(f"Goal                   : {cfg.goal_pos}")
         print(f"Reference sequence     : {ref_seq_now}")
         print(f"Chosen sequence        : {best_seq}")

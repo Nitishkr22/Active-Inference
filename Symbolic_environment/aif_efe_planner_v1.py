@@ -183,6 +183,39 @@ class EFEPlannerV1:
 
         return cand_list
 
+    def enumerate_all_action_sequences(self, horizon: int) -> List[List[int]]:
+        """
+        Pure EFE candidate generation.
+
+        Does not use graph reference sequence.
+        Enumerates action sequences directly.
+        """
+        action_set = [0, 2, 3]
+
+        if self.cfg.allow_backward:
+            action_set = [0, 1, 2, 3]
+
+        candidates: List[List[int]] = [[]]
+
+        for _ in range(horizon):
+            new_candidates = []
+
+            for seq in candidates:
+                for a in action_set:
+                    if len(seq) > 0 and action_inverse(seq[-1], a):
+                        continue
+
+                    new_candidates.append(seq + [a])
+
+            candidates = new_candidates
+
+        candidates.sort()
+
+        if len(candidates) > self.cfg.max_candidates:
+            candidates = candidates[: self.cfg.max_candidates]
+
+        return candidates
+
     def state_entropy_from_belief(
         self,
         row_probs: torch.Tensor,
@@ -471,6 +504,64 @@ class EFEPlannerV1:
 
         return {
             "reference_sequence": ref_seq,
+            "best_sequence": best["sequence"],
+            "best_first_action": int(best["sequence"][0]),
+            "best_score": float(best["score"]),
+            "all_details": all_details,
+            "belief": belief,
+        }
+
+    @torch.no_grad()
+    def score_action_sequences_pure(
+        self,
+        belief: Dict[str, torch.Tensor],
+        recent_true_states: List[Tuple[int, int, str]],
+    ) -> Dict[str, Any]:
+        """
+        Pure EFE scoring.
+
+        This does not build candidate sequences from graph reference.
+        It enumerates action sequences directly.
+        """
+        candidates = self.enumerate_all_action_sequences(self.cfg.horizon)
+
+        if len(candidates) == 0:
+            return {
+                "reference_sequence": [],
+                "best_sequence": [],
+                "best_first_action": None,
+                "best_score": math.inf,
+                "all_details": [],
+                "belief": belief,
+            }
+
+        all_details = []
+
+        for seq in candidates:
+            d = self.score_sequence(
+                belief=belief,
+                action_seq=seq,
+                recent_true_states=recent_true_states,
+            )
+
+            if math.isfinite(d["score"]):
+                all_details.append(d)
+
+        if len(all_details) == 0:
+            return {
+                "reference_sequence": [],
+                "best_sequence": [],
+                "best_first_action": None,
+                "best_score": math.inf,
+                "all_details": [],
+                "belief": belief,
+            }
+
+        all_details.sort(key=lambda x: x["score"])
+        best = all_details[0]
+
+        return {
+            "reference_sequence": [],
             "best_sequence": best["sequence"],
             "best_first_action": int(best["sequence"][0]),
             "best_score": float(best["score"]),

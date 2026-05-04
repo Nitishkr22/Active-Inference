@@ -31,8 +31,8 @@ from aif_efe_planner_v1 import EFEPlannerV1, EFEPlannerConfig
 
 @dataclass
 class EvalConfig:
-    checkpoint_path: str = "./checkpoints_v3/best_model.pt"
-    model_config_json: str = "./checkpoints_v3/model_config.json"
+    checkpoint_path: str = "./checkpoints_v32/best_model_v32.pt"
+    model_config_json: str = "./checkpoints_v32/model_config.json"
 
     num_trials: int = 100
     max_steps: int = 80
@@ -45,23 +45,24 @@ class EvalConfig:
     confidence_entropy_threshold: float = 0.22
     fallback_entropy_threshold: float = 0.8
 
-    # Options: "hybrid", "planner", "graph_ref", "hybrid_efe"
-    controller: str = "hybrid_efe"
-    output_csv: str = "./aif_v3_eval_results_hybrid_efe.csv"
+    # Options: "hybrid", "planner", "graph_ref", "hybrid_efe", "pure_efe"
+    controller: str = "pure_efe"
+    output_csv: str = "./aif_v3_eval_results_pure_efe.csv"
 
     efe_cfg: EFEPlannerConfig = field(
         default_factory=lambda: EFEPlannerConfig(
-            horizon=5,
-            max_candidates=128,
-            allow_backward=True,
-            w_risk=4.0,
-            w_terminal_risk=10.0,
-            w_min_risk=4.0,
-            w_ambiguity=0.10,
-            w_collision=18.0,
+            horizon=5, #5,
+            max_candidates=243, #1024, #128,
+            allow_backward=False,
+            w_risk=6.0, #4.0,
+            w_terminal_risk=18.0, #10.0,
+            w_min_risk=8.0, #4.0,
+            w_ambiguity=0.05, #0.10,
+            w_collision=14.0, #18.0,
             w_info_gain=0.25,
             preference_precision=1.00,
             discount=0.90,
+            reference_prefix_penalty = 0.0,
         )
     )
 
@@ -462,8 +463,8 @@ def run_single_trial(
             mode = "planner"
 
         elif cfg.controller == "hybrid":
-            # confident_pose = belief_ent < cfg.confidence_entropy_threshold
-            # use_fallback = belief_ent > cfg.fallback_entropy_threshold
+            confident_pose = belief_ent < cfg.confidence_entropy_threshold
+            use_fallback = belief_ent > cfg.fallback_entropy_threshold
 
             if confident_pose and len(ref_seq_now) > 0:
                 best_seq = ref_seq_now
@@ -501,11 +502,25 @@ def run_single_trial(
                     mode = "fallback"
                 else:
                     mode = "efe"
-
+        
             else:
                 # Very uncertain → safe fallback
                 best_seq = [greedy_action_from_reference(ref_seq_now)]
                 mode = "fallback"
+
+        elif cfg.controller == "pure_efe":
+            scored = efe_planner.score_action_sequences_pure(
+                belief=belief,
+                recent_true_states=recent_true_states,
+            )
+
+            best_seq = scored.get("best_sequence", [])
+
+            if len(best_seq) == 0:
+                best_seq = [0]
+                mode = "empty_fallback"
+            else:
+                mode = "efe"
 
         else:
             raise ValueError(f"Unknown controller: {cfg.controller}")
