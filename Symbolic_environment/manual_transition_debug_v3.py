@@ -9,17 +9,17 @@ import torch
 from simulator import TinyIndoorEnv, Pose, HEADINGS
 from model_v3 import ModelV3Config, WorldModelV3
 
-
-
 CHECKPOINT_PATH = "./checkpoints_v32/best_model_v32.pt"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 OUTPUT_DIR = "./debug_v3_outputs"
+
 
 # Action indices:
 # 0 = forward
 # 1 = backward
 # 2 = turn_left
 # 3 = turn_right
+
 
 START_POSE = Pose(row=1, col=5, heading="W")
 

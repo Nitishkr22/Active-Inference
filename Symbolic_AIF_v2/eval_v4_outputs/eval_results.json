@@ -1,0 +1,64 @@
+{
+  "checkpoint": "./checkpoints_v4/best_model_v4.pt",
+  "use_predictive_prior": true,
+  "filter": {
+    "filter_row_acc": 1.0,
+    "filter_col_acc": 0.999875,
+    "filter_heading_acc": 1.0,
+    "filter_joint_acc": 0.999875,
+    "filter_collision_acc": 0.9997419354838709,
+    "filter_recon_l1": 0.007007326245307923
+  },
+  "v4_uncertainty": {
+    "mean_context_std": 0.5389162526130676,
+    "mean_context_kl": 37.500804656982424,
+    "mean_vfe_kl": 0.011152087293565273,
+    "encoder_only_joint_acc": 0.99625,
+    "encoder_only_row_acc": 0.9989375,
+    "encoder_only_col_acc": 0.9973125,
+    "encoder_only_heading_acc": 1.0,
+    "posterior_gain_joint_acc": 0.0036249999999999893
+  },
+  "rollout": {
+    "1": {
+      "row_acc": 1.0,
+      "col_acc": 1.0,
+      "heading_acc": 1.0,
+      "joint_acc": 1.0,
+      "collision_acc": 1.0,
+      "recon_l1": 0.0071700986623764035
+    },
+    "2": {
+      "row_acc": 1.0,
+      "col_acc": 1.0,
+      "heading_acc": 1.0,
+      "joint_acc": 1.0,
+      "collision_acc": 1.0,
+      "recon_l1": 0.007193537056446075
+    },
+    "3": {
+      "row_acc": 1.0,
+      "col_acc": 1.0,
+      "heading_acc": 1.0,
+      "joint_acc": 1.0,
+      "collision_acc": 1.0,
+      "recon_l1": 0.007127091725667317
+    },
+    "5": {
+      "row_acc": 1.0,
+      "col_acc": 1.0,
+      "heading_acc": 1.0,
+      "joint_acc": 1.0,
+      "collision_acc": 0.9992,
+      "recon_l1": 0.007051900243759155
+    },
+    "10": {
+      "row_acc": 0.9996,
+      "col_acc": 1.0,
+      "heading_acc": 1.0,
+      "joint_acc": 0.9996,
+      "collision_acc": 0.9992,
+      "recon_l1": 0.007094393634796143
+    }
+  }
+}
