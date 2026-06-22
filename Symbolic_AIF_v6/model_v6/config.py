@@ -113,6 +113,10 @@ class EFEConfig:
     w_info_gain: float = 1.0
     w_action_cost: float = 0.1
     w_stay_penalty: float = 2.0
+    # Penalty for sequences that open with an inverse turn pair (L→R or R→L).
+    # These waste K-2 useful steps and cause the planner to oscillate between
+    # two headings instead of committing to FORWARD near the goal.
+    w_inverse_pair_penalty: float = 1.5
 
     # Goal preference: goal_radius defines the "success zone"
     goal_radius: float = 0.5    # metres

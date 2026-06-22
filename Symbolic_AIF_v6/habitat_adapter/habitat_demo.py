@@ -28,6 +28,7 @@ from __future__ import annotations
 import datetime
 import math
 import os
+import random
 import sys
 import time
 from typing import IO, List, Optional
@@ -101,6 +102,7 @@ def main():
     # 3. Reset episode + sample goal
     # ------------------------------------------------------------------ #
     rgb, depth, cam_to_v6, pose_v6, info = env.reset()
+    env.sim.seed(random.randint(1, 1_000_000))   # randomise goal each run
     goal_v6 = env.sample_goal(min_dist=3.0, max_dist=8.0)
 
     print(f"\nStart pose (V6) : ({pose_v6[0]:.2f}, {pose_v6[1]:.2f}, "
@@ -128,22 +130,21 @@ def main():
           f"{'GoalDist':>8} | {'Dets':>4} | {'Slots':>5} | {'ms':>6}")
     print("-" * 80)
 
-    action      = 0    # will be selected by planner on first real step
-    prev_action = 3    # STOP = no kinematics applied to initial pose at step 1
+    prev_action         = 3                               # STOP: no prior movement at episode start
+    prev_odom           = torch.zeros(3, device=device)  # no odometry before first step
+    blocked_headings: set = set()                         # headings (rad) where FORWARD hit a wall
+    steps_no_progress   = 0                               # steps without meaningful goal-distance reduction
+    prev_goal_dist      = float("inf")
     recent_poses: List[torch.Tensor] = [pose_v6.to(device)]
-    reached   = False
+    reached       = False
     step_times_ms: List[float] = []
 
     for step in range(MAX_STEPS):
         t_step = time.perf_counter()
 
-        # ---- Check goal reached ----
-        if planner.reached_goal(belief):
-            print(f"\n  >> Goal reached at step {step}!")
-            reached = True
-            break
-
-        # ---- Belief update (VFE) ----
+        # ---- Belief update: new RGBD observation + actual odom from prev action ----
+        # odom is passed directly into forward_step so predict() uses it instead of
+        # re-running kinematics — avoids applying the same turn/forward twice.
         with torch.no_grad():
             belief, aux = model.forward_step(
                 rgb          = rgb.to(device),
@@ -151,7 +152,7 @@ def main():
                 action       = prev_action,
                 cam_to_world = cam_to_v6.to(device),
                 prev_belief  = belief,
-                odom         = None,   # we pass odom on next iteration
+                odom         = prev_odom,
                 gt_pose      = None,
             )
 
@@ -159,9 +160,16 @@ def main():
         n_slots   = int(belief.slot_conf_logit.gt(cfg.slots.conf_logit_empty_threshold).sum().item())
         goal_dist = planner.goal_distance(belief)
 
+        # ---- Check goal reached ----
+        if planner.reached_goal(belief):
+            print(f"\n  >> Goal reached at step {step + 1}!")
+            reached = True
+            break
+
         # ---- EFE planning ----
         with torch.no_grad():
-            plan = planner.select_action(belief, recent_poses)
+            plan = planner.select_action(belief, recent_poses,
+                                         blocked_headings=blocked_headings)
         action = plan["best_action"]
 
         # ---- Log ----
@@ -175,18 +183,47 @@ def main():
             f"{goal_dist:8.3f}m | {n_dets:>4} | {n_slots:>5} | {ms:6.0f}"
         )
 
-        # ---- Execute action ----
+        # ---- Execute action in Habitat ----
         rgb, depth, cam_to_v6, odom, pose_v6, done, info = env.step(action)
+        collided = info.get("collided", False)
+        if collided:
+            print(f"       [collision at step {step+1}]")
 
-        # Update belief with actual odometry from Habitat
-        with torch.no_grad():
-            belief.pose_mu, belief.pose_logvar = model.pose_est.predict(
-                belief.pose_mu, belief.pose_logvar,
-                action=action,
-                odom=odom.to(device),
-            )
+        # Update blocked_headings: add current heading when FORWARD is blocked;
+        # clear when FORWARD succeeds (agent moved into a new area).
+        if action == 0:
+            turn_step = cfg.pose.turn_step_rad
+            curr_h = math.atan2(math.sin(belief.pose_mu[2].item()),
+                                 math.cos(belief.pose_mu[2].item()))
+            rounded_h = round(curr_h / turn_step) * turn_step
+            rounded_h = math.atan2(math.sin(rounded_h), math.cos(rounded_h))
+            if collided:
+                blocked_headings.add(rounded_h)
 
+        # Progress-based escape: count steps where goal distance did NOT decrease
+        # by at least 0.05 m. This catches loops where FORWARD occasionally
+        # succeeds (resetting a forward-only counter) but in the wrong direction.
+        if goal_dist < prev_goal_dist - 0.05:
+            steps_no_progress = 0
+            if action == 0 and not collided:
+                blocked_headings.clear()   # moved toward goal — reset wall memory
+        else:
+            steps_no_progress += 1
+
+        prev_goal_dist = goal_dist
+
+        # Escape: if no meaningful progress in 8 steps, clear wall memory.
+        if steps_no_progress >= 8:
+            if blocked_headings:
+                print(f"       [escape: clearing {len(blocked_headings)} blocked headings]")
+            blocked_headings.clear()
+            steps_no_progress = 0
+
+        # Store odom and action for next iteration's forward_step call.
+        # Do NOT call pose_est.predict here — that would double-apply the turn.
+        prev_odom   = odom.to(device)
         prev_action = action
+
         recent_poses.append(belief.pose_mu.detach().clone())
         if len(recent_poses) > 10:
             recent_poses = recent_poses[-10:]

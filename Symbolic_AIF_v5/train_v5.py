@@ -148,8 +148,14 @@ class TrainV5Config:
     w_vfe_kl: float = 0.02
     kl_warmup_epochs: int = 5
 
-    # Observation noise injection
-    obs_noise_sigma: float = 0.07
+    # Observation noise injection — sigma sampled uniformly from [0, max] each batch (V5f)
+    obs_noise_sigma_max: float = 0.20
+
+    # Observation masking augmentation (V5e)
+    obs_mask_fraction: float = 0.20
+
+    # Logvar coupling loss (V5e)
+    w_logvar_coupling: float = 0.05
 
     # Predictive prior
     use_predictive_prior: bool = True
@@ -159,7 +165,7 @@ class TrainV5Config:
 
     # Runtime
     print_every: int = 50
-    save_dir: str = "./checkpoints_v5"
+    save_dir: str = "./checkpoints_v5f"
     save_every_epoch: bool = False
     use_amp: bool = True
     deterministic: bool = False
@@ -410,6 +416,20 @@ def compute_batch_losses(
     else:
         kl_vfe = row_logits_seq.new_tensor(0.0)
 
+    # ---- Logvar coupling loss (V5e) ----
+    if recon_seq is not None and cfg.w_logvar_coupling > 0.0:
+        recon_err = F.l1_loss(recon_seq, observations, reduction='none').mean(dim=[2, 3, 4])
+        logvar_mean = filt["context_logvar_seq"].mean(dim=-1)
+        x_flat = recon_err.detach().reshape(-1)
+        y_flat = logvar_mean.reshape(-1)
+        x_c = x_flat - x_flat.mean()
+        y_c = y_flat - y_flat.mean()
+        logvar_coupling_loss = -(x_c * y_c).sum() / (
+            (x_c.pow(2).sum().sqrt() * y_c.pow(2).sum().sqrt()).clamp_min(1e-8)
+        )
+    else:
+        logvar_coupling_loss = row_logits_seq.new_tensor(0.0)
+
     # ---- Rollout ----
     rollout_targets = sample_rollout_targets(
         row_probs_seq, col_probs_seq, heading_probs_seq, context_seq,
@@ -468,6 +488,7 @@ def compute_batch_losses(
         + curriculum.w_context_stability * context_stability_loss
         + kl_weight * cfg.w_kl_context  * kl_context
         + kl_weight * cfg.w_vfe_kl      * kl_vfe
+        + cfg.w_logvar_coupling         * logvar_coupling_loss
     )
 
     metrics: Dict[str, float] = {
@@ -482,6 +503,7 @@ def compute_batch_losses(
         "loss_roll_collision":   float(roll_collision_loss.detach().item()),
         "loss_roll_stay":        float(roll_stay_loss.detach().item()),
         "loss_context_stability": float(context_stability_loss.detach().item()),
+        "loss_logvar_coupling":  float(logvar_coupling_loss.detach().item()),
         "rollout_start_t_min":   float(curriculum.rollout_start_t_min),
         "rollout_horizon":       float(curriculum.rollout_horizon),
         "kl_weight":             float(kl_weight),
@@ -502,6 +524,15 @@ def compute_batch_losses(
 
 def add_obs_noise(obs: torch.Tensor, sigma: float) -> torch.Tensor:
     return (obs + torch.randn_like(obs) * sigma).clamp_(0.0, 1.0)
+
+
+def add_obs_mask(obs: torch.Tensor, mask_fraction: float) -> torch.Tensor:
+    B, T, C, H, W = obs.shape
+    keep_prob = 1.0 - mask_fraction
+    mask = torch.bernoulli(
+        torch.full((B, T, 1, H, W), keep_prob, device=obs.device, dtype=obs.dtype)
+    )
+    return obs * mask
 
 
 # ============================================================
@@ -536,8 +567,12 @@ def run_epoch(
         for batch_idx, batch in enumerate(loader):
             batch = move_batch_to_device(batch, device)
 
-            if train and cfg.obs_noise_sigma > 0.0:
-                batch["observations"] = add_obs_noise(batch["observations"], cfg.obs_noise_sigma)
+            if train and cfg.obs_noise_sigma_max > 0.0:
+                sigma = random.uniform(0.0, cfg.obs_noise_sigma_max)
+                batch["observations"] = add_obs_noise(batch["observations"], sigma)
+
+            if train and cfg.obs_mask_fraction > 0.0:
+                batch["observations"] = add_obs_mask(batch["observations"], cfg.obs_mask_fraction)
 
             if optimizer is not None:
                 optimizer.zero_grad(set_to_none=True)
@@ -569,6 +604,7 @@ def run_epoch(
                     f"recon={metrics['loss_recon']:.4f} | "
                     f"kl_ctx={metrics['loss_kl_context']:.5f} | "
                     f"kl_vfe={metrics['loss_kl_vfe']:.5f} | "
+                    f"logvar_coup={metrics['loss_logvar_coupling']:.4f} | "
                     f"H=({metrics['filter_row_entropy']:.3f},"
                     f"{metrics['filter_col_entropy']:.3f},"
                     f"{metrics['filter_heading_entropy']:.3f})"

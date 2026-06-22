@@ -25,7 +25,8 @@ Sequences  : 3^K (forward=0, turn_left=1, turn_right=2) — same count as V5.
 from __future__ import annotations
 
 import itertools
-from typing import Any, Dict, List, Optional, Tuple
+import math
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import torch
 
@@ -33,6 +34,16 @@ import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from model_v6 import BeliefState, WorldModelV6
 from model_v6.config import EFEConfig
+
+
+def _round_heading(theta: float, turn_step: float) -> float:
+    """Round theta to the nearest multiple of turn_step, normalised to [-π, π]."""
+    n = round(theta / turn_step)
+    return math.atan2(math.sin(n * turn_step), math.cos(n * turn_step))
+
+
+def _wrap(theta: float) -> float:
+    return math.atan2(math.sin(theta), math.cos(theta))
 
 
 class EFEPlannerV4:
@@ -67,7 +78,8 @@ class EFEPlannerV4:
     def select_action(
         self,
         belief:              BeliefState,
-        recent_poses:        Optional[List[torch.Tensor]] = None,  # for loop detection
+        recent_poses:        Optional[List[torch.Tensor]] = None,
+        blocked_headings:    Optional[Set[float]] = None,  # headings where FORWARD is known to be blocked
     ) -> Dict[str, Any]:
         """
         Return the best first action for the current belief.
@@ -121,6 +133,48 @@ class EFEPlannerV4:
             near_last = ((pred_xy - last_xy.unsqueeze(0)).norm(dim=-1) < 0.3).float()
             stay_penalty = self.cfg.w_stay_penalty * near_last
 
+        # ---- Wall-collision penalty ----
+        # For each candidate sequence, simulate the heading at the point the first
+        # FORWARD is attempted (after any leading turns).  If that heading is in
+        # blocked_headings (known wall), assign 1e6 to prevent oscillation between
+        # two adjacent blocked headings.  The set clears when FORWARD succeeds.
+        blocked_penalty = torch.zeros(N, device=device)
+        if blocked_headings:
+            turn_step  = self.model.cfg.pose.turn_step_rad
+            curr_theta = belief.pose_mu[2].item()
+            for i, seq in enumerate(candidates.tolist()):
+                theta = curr_theta
+                for act in seq:
+                    if act == 0:   # FORWARD: check heading
+                        h = _round_heading(theta, turn_step)
+                        if h in blocked_headings:
+                            blocked_penalty[i] = 1e6
+                        break
+                    elif act == 1:  # TURN_L
+                        theta = _wrap(theta + turn_step)
+                    elif act == 2:  # TURN_R
+                        theta = _wrap(theta - turn_step)
+
+        # If every sequence containing a FORWARD is blocked, disable the penalty
+        # so the planner can still pick a forward direction instead of oscillating
+        # between pure-turn sequences indefinitely.
+        if blocked_headings:
+            has_fwd = (candidates == 0).any(dim=-1)   # [N]
+            if has_fwd.any() and (blocked_penalty[has_fwd] > 0).all():
+                blocked_penalty = torch.zeros(N, device=device)
+
+        # ---- Inverse-pair penalty ----
+        # Sequences that open with L→R or R→L waste two steps on a do-undo turn.
+        # The planner exploits them near the goal (the K-2 FORWARDs that follow
+        # end up close to the target), but executing one step at a time means the
+        # agent never commits: it alternates between the two turns forever.
+        inverse_pair_penalty = torch.zeros(N, device=device)
+        if K >= 2:
+            first  = candidates[:, 0]   # [N]
+            second = candidates[:, 1]   # [N]
+            bad = ((first == 1) & (second == 2)) | ((first == 2) & (second == 1))
+            inverse_pair_penalty[bad] = self.cfg.w_inverse_pair_penalty
+
         # ---- Total EFE ----
         efe = (
             self.cfg.w_risk       * risk
@@ -128,6 +182,8 @@ class EFEPlannerV4:
             - self.cfg.w_info_gain  * info_gain
             + action_cost
             + stay_penalty
+            + blocked_penalty
+            + inverse_pair_penalty
         )
 
         best_idx = int(efe.argmin().item())

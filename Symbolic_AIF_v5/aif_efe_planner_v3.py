@@ -118,6 +118,19 @@ class EFEPlannerV3(EFEPlannerV2):
         info_gain = (current_entropy - ambiguity).clamp_min(0.0)  # [N, K]
 
         # ------------------------------------------------------------------ #
+        # Adaptive precision: scale risk DOWN and epistemic terms UP when
+        # belief entropy is high (agent is lost / uncertain).
+        # ------------------------------------------------------------------ #
+        if self.cfg.adaptive_precision and self.cfg.adaptive_entropy_threshold > 0.0:
+            h_norm = min(current_entropy / self.cfg.adaptive_entropy_threshold, 1.0)
+        else:
+            h_norm = 0.0
+        eff_w_risk             = self.cfg.w_risk             * (1.0 - (1.0 - self.cfg.adaptive_risk_min_scale) * h_norm)
+        eff_w_terminal_risk    = self.cfg.w_terminal_risk    * (1.0 - 0.25 * h_norm)
+        eff_w_context_unc      = self.cfg.w_context_uncertainty * (1.0 + (self.cfg.adaptive_epistemic_boost - 1.0) * h_norm)
+        eff_w_info_gain        = self.cfg.w_info_gain        * (1.0 + 2.0 * h_norm)
+
+        # ------------------------------------------------------------------ #
         # 6.  Context uncertainty  [N, K]  (optional)
         # ------------------------------------------------------------------ #
         if self.cfg.use_context_uncertainty and "context_logvar_roll" in roll and roll["context_logvar_roll"] is not None:
@@ -136,13 +149,13 @@ class EFEPlannerV3(EFEPlannerV2):
         # ------------------------------------------------------------------ #
         # 8.  Discounted sums  [N]
         # ------------------------------------------------------------------ #
-        risk_sum      = (discount * risk).sum(-1)      * self.cfg.w_risk
+        risk_sum      = (discount * risk).sum(-1)      * eff_w_risk
         ambiguity_sum = (discount * ambiguity).sum(-1) * self.cfg.w_ambiguity
         coll_sum      = (discount * coll_prob).sum(-1) * self.cfg.w_collision
-        info_gain_sum = (discount * info_gain).sum(-1) * self.cfg.w_info_gain
-        ctx_unc_sum   = (discount * ctx_unc).sum(-1)   * self.cfg.w_context_uncertainty
+        info_gain_sum = (discount * info_gain).sum(-1) * eff_w_info_gain
+        ctx_unc_sum   = (discount * ctx_unc).sum(-1)   * eff_w_context_unc
 
-        terminal_risk = self.cfg.w_terminal_risk * risk[:, -1]      # [N]
+        terminal_risk = eff_w_terminal_risk * risk[:, -1]      # [N]
         min_risk      = self.cfg.w_min_risk * risk.min(dim=-1).values  # [N]
 
         # ------------------------------------------------------------------ #

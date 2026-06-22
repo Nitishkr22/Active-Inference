@@ -80,6 +80,12 @@ class EFEPlannerConfig:
 
     eps: float = 1e-8
 
+    # Adaptive precision weighting (V4d+)
+    adaptive_precision: bool = True
+    adaptive_entropy_threshold: float = 0.10
+    adaptive_risk_min_scale: float = 0.50
+    adaptive_epistemic_boost: float = 6.0
+
 
 class EFEPlannerV2:
     """

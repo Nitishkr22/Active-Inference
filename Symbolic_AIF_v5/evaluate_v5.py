@@ -40,8 +40,8 @@ from aif_efe_planner_v3 import EFEPlannerV3
 
 @dataclass
 class EvalConfig:
-    checkpoint_path:   str = "./checkpoints_v5/best_model_v5.pt"
-    model_config_json: str = "./checkpoints_v5/model_config.json"
+    checkpoint_path:   str = "./checkpoints_v5f/best_model_v5.pt"
+    model_config_json: str = "./checkpoints_v5f/model_config.json"
 
     num_trials: int = 100
     max_steps:  int = 80
@@ -58,8 +58,8 @@ class EvalConfig:
 
     controller: str = "pure_efe"
 
-    output_csv:     str = "./v5_eval_results_v3planner.csv"
-    output_summary: str = "./v5_eval_summary_v3planner.json"
+    output_csv:     str = "./v5f_eval_results.csv"
+    output_summary: str = "./v5f_eval_summary.json"
 
     efe_cfg: EFEPlannerConfig = field(
         default_factory=lambda: EFEPlannerConfig(
@@ -77,6 +77,10 @@ class EvalConfig:
             preference_precision=1.00,
             discount=0.90,
             reference_prefix_penalty=0.0,
+            adaptive_precision=True,
+            adaptive_entropy_threshold=0.10,
+            adaptive_risk_min_scale=0.50,
+            adaptive_epistemic_boost=6.0,
         )
     )
 

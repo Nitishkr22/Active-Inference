@@ -170,11 +170,19 @@ class HabitatEnv:
         self,
         min_dist: float = 3.0,
         max_dist: float = 8.0,
-        max_tries: int  = 200,
+        max_tries: int  = 500,
     ) -> torch.Tensor:
         """
         Sample a random navigable goal at geodesic distance [min_dist, max_dist]
         from the current agent position.
+
+        Strategy 1 (primary): Radial sampling around the current position.
+          Draw a random distance + angle, offset in V6 frame, convert to Habitat 3D,
+          snap to the navmesh. Snapped points stay on the same floor and are far
+          more likely to be in the same connected navmesh component than purely
+          random navigable points scattered across the scene.
+
+        Strategy 2 (fallback): Pure random navigable points (the original approach).
 
         Internally stores the 3-D Habitat position (including floor Y) so that
         goal_dist_habitat() can pass the correct Y back to the pathfinder.
@@ -182,51 +190,124 @@ class HabitatEnv:
         Returns goal_v6: torch [2]  (x_fwd, y_left) in V6 frame.
         """
         current_hab_pos = np.array(self.agent.get_state().position)
+        # Snap start to navmesh — state.position can be a few mm off the mesh,
+        # which causes geodesic_distance to return inf for ALL queries.
+        current_snapped = self.sim.pathfinder.snap_point(current_hab_pos)
+        if np.any(np.isnan(current_snapped)):
+            current_snapped = current_hab_pos
+        # V6 y of the start — used to reject goals too far south of the corridor.
+        start_y_v6 = -float(current_hab_pos[0])
 
-        for _ in range(max_tries):
-            candidate = self.sim.pathfinder.get_random_navigable_point()
+        def _to_v6(pt_hab: np.ndarray) -> torch.Tensor:
+            return torch.tensor(
+                [-float(pt_hab[2]), -float(pt_hab[0])],
+                dtype=torch.float32,
+            )
+
+        def _euclidean_v6(a: np.ndarray, b: np.ndarray) -> float:
+            """Euclidean distance between two Habitat 3D points in V6 XY plane."""
+            return math.sqrt((-a[2] - -b[2])**2 + (-a[0] - -b[0])**2)
+
+        def _try_geodesic(cand: np.ndarray) -> Optional[torch.Tensor]:
+            """Accept candidate if geodesic distance is in [min_dist, max_dist].
+            Uses the navmesh-snapped start so the pathfinder can locate it."""
+            if np.any(np.isnan(cand)):
+                return None
             try:
-                d = self.sim.pathfinder.geodesic_distance(current_hab_pos, candidate)
+                d = self.sim.pathfinder.geodesic_distance(current_snapped, cand)
             except Exception:
-                continue
+                return None
             if math.isfinite(d) and min_dist <= d <= max_dist:
-                self._goal_hab3d = np.array(candidate, dtype=np.float32)
-                return torch.tensor(
-                    [-float(candidate[2]), -float(candidate[0])],
-                    dtype=torch.float32,
-                )
+                self._goal_hab3d = np.array(cand, dtype=np.float32)
+                return _to_v6(cand)
+            return None
 
-        # Fallback: find any navigable point with a finite geodesic distance
-        for _ in range(max_tries):
-            candidate = self.sim.pathfinder.get_random_navigable_point()
+        def _try_euclidean(cand: np.ndarray) -> Optional[torch.Tensor]:
+            """Accept candidate if Euclidean distance is in [min_dist, max_dist],
+            the point is navigable, and it is not too far south of the start
+            (avoids rooms behind walls in the south of the apartment)."""
+            if np.any(np.isnan(cand)):
+                return None
             try:
-                d = self.sim.pathfinder.geodesic_distance(current_hab_pos, candidate)
+                if not self.sim.pathfinder.is_navigable(cand):
+                    return None
+            except Exception:
+                return None
+            # Reject goals more than 0.5 m south (in V6 y) of the start.
+            # Near the start position the south wall is ~0.5 m away; allowing
+            # goals further south leads to unreachable rooms behind that wall.
+            goal_y_v6 = -float(cand[0])
+            if goal_y_v6 < start_y_v6 - 0.5:
+                return None
+            d = _euclidean_v6(current_hab_pos, cand)
+            if min_dist <= d <= max_dist:
+                self._goal_hab3d = np.array(cand, dtype=np.float32)
+                return _to_v6(cand)
+            return None
+
+        def _make_radial(dist: float, angle: float) -> np.ndarray:
+            """Radial offset in V6 frame → Habitat 3D candidate (same floor Y)."""
+            dx_v6 = dist * math.cos(angle)
+            dy_v6 = dist * math.sin(angle)
+            return np.array([
+                current_hab_pos[0] - dy_v6,
+                current_hab_pos[1],
+                current_hab_pos[2] - dx_v6,
+            ], dtype=np.float32)
+
+        # Strategy 1: radial snap + geodesic check.
+        # Radial offsets from current position convert correctly:
+        #   x_v6 = -Z_hab  →  Z_hab = Z_start - dx_v6
+        #   y_v6 = -X_hab  →  X_hab = X_start - dy_v6
+        for _ in range(max_tries):
+            raw = _make_radial(np.random.uniform(min_dist, max_dist),
+                               np.random.uniform(0.0, 2.0 * math.pi))
+            result = _try_geodesic(self.sim.pathfinder.snap_point(raw))
+            if result is not None:
+                return result
+
+        # Strategy 2: random navigable points + geodesic check.
+        for _ in range(max_tries):
+            result = _try_geodesic(self.sim.pathfinder.get_random_navigable_point())
+            if result is not None:
+                return result
+
+        # Strategy 3: radial snap + Euclidean check (geodesic unavailable on this scene).
+        # Goal may be in a different room, but at least the right Euclidean distance.
+        for _ in range(max_tries):
+            raw = _make_radial(np.random.uniform(min_dist, max_dist),
+                               np.random.uniform(0.0, 2.0 * math.pi))
+            result = _try_euclidean(self.sim.pathfinder.snap_point(raw))
+            if result is not None:
+                return result
+
+        # Last resort: any reachable navigable point
+        for _ in range(max_tries):
+            cand = self.sim.pathfinder.get_random_navigable_point()
+            try:
+                d = self.sim.pathfinder.geodesic_distance(current_hab_pos, cand)
             except Exception:
                 continue
             if math.isfinite(d) and d > 0.5:
-                self._goal_hab3d = np.array(candidate, dtype=np.float32)
-                return torch.tensor(
-                    [-float(candidate[2]), -float(candidate[0])],
-                    dtype=torch.float32,
-                )
+                self._goal_hab3d = np.array(cand, dtype=np.float32)
+                return _to_v6(cand)
 
-        # Last resort: raw navigable point (may be disconnected)
-        candidate = self.sim.pathfinder.get_random_navigable_point()
-        self._goal_hab3d = np.array(candidate, dtype=np.float32)
-        return torch.tensor(
-            [-float(candidate[2]), -float(candidate[0])],
-            dtype=torch.float32,
-        )
+        # Absolute last resort: raw random navigable point (may be disconnected)
+        cand = self.sim.pathfinder.get_random_navigable_point()
+        self._goal_hab3d = np.array(cand, dtype=np.float32)
+        return _to_v6(cand)
 
     def goal_dist_habitat(self, goal_v6: torch.Tensor) -> float:
         """
         Geodesic distance from current agent to goal.
 
-        Uses the stored Habitat 3-D position from sample_goal() when available
-        (preserves the correct floor height).  Falls back to reconstructing from
-        V6 coordinates using the current agent's Y for the goal floor.
+        Snaps the agent position to the navmesh before querying (state.position
+        can be a few mm off-mesh, which causes geodesic_distance to return inf).
         """
         current = np.array(self.agent.get_state().position)
+        current_snapped = self.sim.pathfinder.snap_point(current)
+        if np.any(np.isnan(current_snapped)):
+            current_snapped = current
         if self._goal_hab3d is not None:
             goal_hab = self._goal_hab3d
         else:
@@ -236,7 +317,7 @@ class HabitatEnv:
                 -goal_v6[0].item(),  # Z_hab = -x_v6
             ])
         try:
-            return float(self.sim.pathfinder.geodesic_distance(current, goal_hab))
+            return float(self.sim.pathfinder.geodesic_distance(current_snapped, goal_hab))
         except Exception:
             return float("inf")
 
