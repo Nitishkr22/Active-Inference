@@ -91,16 +91,16 @@ NOISE_CONDITIONS: List[NoiseCondition] = [
 
 @dataclass
 class SweepConfig:
-    checkpoint_path:   str = "./checkpoints_v4b/best_model_v4.pt"
-    model_config_json: str = "./checkpoints_v4b/model_config.json"
+    checkpoint_path:   str = "./checkpoints_v4e/best_model_v4.pt"
+    model_config_json: str = "./checkpoints_v4e/model_config.json"
 
-    num_trials:   int   = 25      # trials per noise level (reused across conditions)
-    max_steps:    int   = 40
+    num_trials:   int   = 25      # trials per noise level
+    max_steps:    int   = 80      # steps per trial
     seed:         int   = 42
-    history_keep: int   = 8       # short window for speed; GRU hidden state carries long-range context
+    history_keep: int   = 64      # matches main clean evaluation settings
     warmup_actions: Tuple[int, ...] = (2, 3, 3, 2)
 
-    output_dir: str = "./noise_sweep_outputs"
+    output_dir: str = "./noise_sweep_outputs_v4e"
 
     efe_cfg: EFEPlannerConfig = field(
         default_factory=lambda: EFEPlannerConfig(
@@ -118,6 +118,11 @@ class SweepConfig:
             preference_precision=1.00,
             discount=0.90,
             reference_prefix_penalty=0.0,
+            # Adaptive precision weighting (epistemic exploration)
+            adaptive_precision=True,
+            adaptive_entropy_threshold=0.10,
+            adaptive_risk_min_scale=0.50,
+            adaptive_epistemic_boost=6.0,
         )
     )
 
@@ -381,7 +386,12 @@ def run_condition(
     results = []
     for i, (start_pose, goal_pos) in enumerate(pairs):
         dist_t = dist_maps[goal_pos].to(device)
+        # Update both dist_t AND neg_log_pref — the preference map is derived
+        # from dist_t and must be rebuilt whenever the goal changes.
         efe_planner.dist_t = dist_t
+        efe_planner.neg_log_pref = efe_planner._build_negative_log_preferences(
+            dist_t=dist_t, reachable_mask=reachable_mask
+        )
 
         r = run_trial(
             trial_id=i, start_pose=start_pose, goal_pos=goal_pos,

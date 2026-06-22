@@ -177,21 +177,33 @@ class TrainV4Config:
     w_roll_stay: float = 0.5
     w_context_stability: float = 0.1
 
-    # V4b: uncertainty losses
-    # NOTE: w_entropy (V3) is intentionally removed.
-    # Minimising entropy forced the model to be overconfident even where evidence
-    # was ambiguous.  It is replaced by the principled KL terms below.
-    #
-    # Changes vs V4:
-    #   w_kl_context 0.001 → 0.01  (10× increase): the V4 context KL ended at
-    #     37.5 nats — far above the N(0,I) prior.  Higher pressure pulls it down.
-    #   w_vfe_kl 0.05 → 0.02: slightly relaxed so context KL can dominate during
-    #     the warmup phase without the two terms competing.
-    #   context_free_bits=0.05 in ModelV4Config prevents per-dim posterior collapse
-    #     once the KL is properly regularised.
+    # V4c: uncertainty losses (same as V4b)
     w_kl_context: float = 0.01    # KL( N(mu,sigma) || N(0,I) ) for context VAE
     w_vfe_kl: float = 0.02        # KL( posterior || transition prior ) — VFE term
     kl_warmup_epochs: int = 5     # epochs to linearly ramp KL weights from 0 → full
+
+    # V4c: observation noise injection during training only.
+    # Forces the encoder to maintain genuine uncertainty in discrete pose beliefs
+    # rather than collapsing to near-deterministic spikes.  Validation always
+    # uses clean observations so metrics remain comparable across versions.
+    # sigma=0.07 is a conservative start — impactful but not overwhelming.
+    obs_noise_sigma: float = 0.07
+
+    # V4d: context logvar coupling.
+    # Trains context_logvar to track reconstruction difficulty: high recon error
+    # → high logvar (genuine uncertainty); low recon error → low logvar (confident).
+    # When > 0.0 this is V4d training — change save_dir to ./checkpoints_v4d.
+    # Uses Pearson correlation between per-step recon L1 error and mean logvar.
+    # Start with 0.05; the loss is bounded in [-1, 1] (negated correlation).
+    w_logvar_coupling: float = 0.05
+
+    # V4e: random pixel masking augmentation (training only).
+    # A fraction of pixels are zeroed per frame, independently per (B, T) sample.
+    # This forces the encoder to maintain calibrated uncertainty when structural
+    # image information is missing — bridging the train/eval distribution gap.
+    # Set to 0.0 to disable (V4d behaviour).
+    # 0.20 exposes the model to partial masking without being too harsh.
+    obs_mask_fraction: float = 0.20
 
     # V4: predictive prior toggle
     use_predictive_prior: bool = True
@@ -201,7 +213,7 @@ class TrainV4Config:
 
     # Runtime
     print_every: int = 50
-    save_dir: str = "./checkpoints_v4b"
+    save_dir: str = "./checkpoints_v4e"
     save_every_epoch: bool = False
     use_amp: bool = True
     deterministic: bool = False
@@ -682,6 +694,22 @@ def compute_batch_losses(
         collision_targets=rollout_targets["collision_target"],
     )
 
+    # ---- V4d: context logvar coupling ----
+    # Maximise Pearson correlation between per-step reconstruction L1 error
+    # and mean context logvar.  Loss = -correlation ∈ [-1, 1].
+    if cfg.w_logvar_coupling > 0.0:
+        recon_err = F.l1_loss(recon_seq, observations, reduction='none').mean(dim=[2, 3, 4])  # [B, T]
+        logvar_mean = filt["context_logvar_seq"].mean(dim=-1)  # [B, T]
+        x_flat = recon_err.detach().reshape(-1)
+        y_flat = logvar_mean.reshape(-1)
+        x_c = x_flat - x_flat.mean()
+        y_c = y_flat - y_flat.mean()
+        logvar_coupling_loss = -(x_c * y_c).sum() / (
+            (x_c.pow(2).sum().sqrt() * y_c.pow(2).sum().sqrt()).clamp_min(1e-8)
+        )
+    else:
+        logvar_coupling_loss = row_logits_seq.new_tensor(0.0)
+
     # ---- Total loss ----
     # kl_weight is annealed from 0→1 over kl_warmup_epochs so that the model
     # first learns accurate beliefs before the KL regularisation kicks in.
@@ -696,6 +724,7 @@ def compute_batch_losses(
         + curriculum.w_context_stability * context_stability_loss
         + kl_weight * cfg.w_kl_context * kl_context
         + kl_weight * cfg.w_vfe_kl * kl_vfe
+        + cfg.w_logvar_coupling * logvar_coupling_loss
     )
 
     metrics: Dict[str, float] = {
@@ -710,6 +739,7 @@ def compute_batch_losses(
         "loss_roll_collision": float(roll_collision_loss.detach().item()),
         "loss_roll_stay": float(roll_stay_loss.detach().item()),
         "loss_context_stability": float(context_stability_loss.detach().item()),
+        "loss_logvar_coupling": float(logvar_coupling_loss.detach().item()),
         "rollout_start_t_min": float(curriculum.rollout_start_t_min),
         "rollout_horizon": float(curriculum.rollout_horizon),
         "kl_weight": float(kl_weight),
@@ -729,6 +759,40 @@ def compute_batch_losses(
     ))
 
     return total_loss, metrics
+
+
+# ============================================================
+# Observation noise (training only)
+# ============================================================
+
+def add_obs_noise(
+    obs: torch.Tensor,
+    sigma: float,
+) -> torch.Tensor:
+    """
+    Add i.i.d. Gaussian noise to a float32 observation tensor and clamp to [0,1].
+    Applied only during training so validation metrics reflect clean performance.
+    obs shape: [B, T, C, H, W]
+    """
+    return (obs + torch.randn_like(obs) * sigma).clamp_(0.0, 1.0)
+
+
+def add_obs_mask(
+    obs: torch.Tensor,
+    mask_fraction: float,
+) -> torch.Tensor:
+    """
+    Randomly zero out a fraction of pixels per frame.
+    The binary mask is sampled independently for each (B, T) frame and
+    broadcast across channels, matching the eval masking scheme.
+    obs shape: [B, T, C, H, W]
+    """
+    B, T, C, H, W = obs.shape
+    keep_prob = 1.0 - mask_fraction
+    mask = torch.bernoulli(
+        torch.full((B, T, 1, H, W), keep_prob, device=obs.device, dtype=obs.dtype)
+    )
+    return obs * mask
 
 
 # ============================================================
@@ -775,6 +839,18 @@ def run_epoch(
     with grad_context:
         for batch_idx, batch in enumerate(loader):
             batch = move_batch_to_device(batch, device)
+
+            # Corrupt observations during training so the model learns to maintain
+            # genuine uncertainty in pose beliefs rather than collapsing to spikes.
+            # Validation batches are always left clean.
+            if train and cfg.obs_noise_sigma > 0.0:
+                batch["observations"] = add_obs_noise(
+                    batch["observations"], cfg.obs_noise_sigma
+                )
+            if train and cfg.obs_mask_fraction > 0.0:
+                batch["observations"] = add_obs_mask(
+                    batch["observations"], cfg.obs_mask_fraction
+                )
 
             if optimizer is not None:
                 optimizer.zero_grad(set_to_none=True)

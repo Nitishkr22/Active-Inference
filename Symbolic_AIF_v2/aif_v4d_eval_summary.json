@@ -1,0 +1,20 @@
+{
+  "num_trials": 100,
+  "success_rate": 0.99,
+  "timeout_rate": 0.01,
+  "avg_steps_successful": 12.88888888888889,
+  "avg_steps_all": 13.56,
+  "avg_collisions": 0.0,
+  "collision_rate": 0.0,
+  "mean_path_efficiency": 0.6969884111000824,
+  "mean_belief_error_rate": 0.020478896103896103,
+  "mean_entropy": 0.002626063287684793,
+  "mean_context_std": 0.8150917226909268,
+  "mean_vfe_kl": 0.0,
+  "total_graph_ref": 0,
+  "total_planner": 0,
+  "total_efe": 1356,
+  "total_fallback": 0,
+  "total_empty_fallback": 0,
+  "total_wall_clock_seconds": 2745.02
+}

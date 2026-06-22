@@ -37,8 +37,8 @@ from aif_efe_planner_v2 import EFEPlannerV2, EFEPlannerConfig
 
 @dataclass
 class EvalConfig:
-    checkpoint_path:   str = "./checkpoints_v4b/best_model_v4.pt"
-    model_config_json: str = "./checkpoints_v4b/model_config.json"
+    checkpoint_path:   str = "./checkpoints_v4e/best_model_v4.pt"
+    model_config_json: str = "./checkpoints_v4e/model_config.json"
 
     num_trials: int   = 100
     max_steps:  int   = 80
@@ -53,8 +53,8 @@ class EvalConfig:
 
     # Options: "pure_efe" | "hybrid_efe" | "planner" | "graph_ref"
     controller: str = "pure_efe"
-    output_csv:     str = "./aif_v4_eval_results_pure_efe.csv"
-    output_summary: str = "./aif_v4_eval_summary.json"
+    output_csv:     str = "./aif_v4e_eval_results_pure_efe.csv"
+    output_summary: str = "./aif_v4e_eval_summary.json"
 
     efe_cfg: EFEPlannerConfig = field(
         default_factory=lambda: EFEPlannerConfig(
@@ -73,6 +73,14 @@ class EvalConfig:
             preference_precision=1.00,
             discount=0.90,
             reference_prefix_penalty=0.0,
+            # Adaptive precision weighting (epistemic exploration)
+            # When belief entropy is high, risk weight is halved and epistemic
+            # weights are boosted up to 6x — implementing genuine uncertainty-driven
+            # information-seeking behaviour.
+            adaptive_precision=True,
+            adaptive_entropy_threshold=0.10,
+            adaptive_risk_min_scale=0.50,
+            adaptive_epistemic_boost=6.0,
         )
     )
 

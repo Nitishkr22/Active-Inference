@@ -1,0 +1,37 @@
+V6 Habitat Demo — Run 001
+Date: 2026-06-22
+Scene: apartment_1.glb
+Model: WorldModelV6 (Faster R-CNN + EKF belief, 248K learnable params)
+
+Start pose (V6) : (2.02, -0.94, 0.0°)
+Goal  (V6)      : (-7.42, -3.50)
+Geodesic dist   : inf  [NOTE: goal sampled in disconnected region — fix needed]
+
+Step |  Action |               Pose (x, y, θ) | GoalDist | Dets | Slots |     ms
+   1 |  TURN_R | (  2.27,  -0.94,   0.0°) |   10.030m |    0 |     0 |    477
+   2 |  TURN_R | (  2.27,  -0.94, -60.0°) |   10.030m |    0 |     0 |     89
+   3 |  TURN_R | (  2.27,  -0.94, -120.0°)|   10.030m |    1 |     1 |     66
+   4 | FORWARD | (  2.27,  -0.93, 180.0°) |   10.029m |    1 |     1 |     63
+   5 | FORWARD | (  2.01,  -1.23, 180.0°) |    9.709m |    2 |     2 |     61
+  ...
+  33 | FORWARD | ( -5.00,  -5.32, 120.0°) |    3.026m |    1 |     6 |     58
+  34 | FORWARD | ( -5.26,  -5.10, 120.0°) |    2.695m |    1 |     7 |     58
+  43 | FORWARD | ( -6.96,  -4.04, 120.0°) |    0.710m |    1 |     7 |     57
+  44 |  TURN_L | ( -7.21,  -3.82, 120.0°) |    0.385m |    1 |     8 |     58
+
+Result          : SUCCESS
+Steps taken     : 45
+Final goal dist : 0.385m  (threshold 0.5m)
+Mean ms/step    : 69 ms
+
+OBSERVATIONS:
+- Navigation succeeded despite geodesic dist = inf (Euclidean risk term drove navigation)
+- Detections low (0-3 per frame): Faster R-CNN COCO doesn't match Habitat test scenes well
+- Slot count grew 0 → 8 over 44 steps (map is being built)
+- Speed: 69ms/step on RTX 3080 (first step 477ms = GPU warmup, subsequent 57-89ms)
+- Pose showed 0.25m jump at step 1 (spurious FORWARD kinematics on first iter — known bug)
+
+ISSUES TO FIX:
+1. Goal sampling: geodesic=inf means goal was in disconnected area. Validate reachability.
+2. Low detector hit rate on Habitat test scenes — consider semantic sensor for testing
+3. First step spurious FORWARD: prev_action should start as None / no-op

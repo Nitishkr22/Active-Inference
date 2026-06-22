@@ -1,0 +1,19 @@
+{
+  "num_trials": 100,
+  "inference_mode": "online",
+  "success_rate": 0.98,
+  "timeout_rate": 0.02,
+  "avg_steps_successful": 13.989795918367347,
+  "avg_steps_all": 15.31,
+  "avg_collisions": 0.0,
+  "collision_rate": 0.0,
+  "mean_path_efficiency": 0.6488383136568441,
+  "mean_belief_error_rate": 0.10467747287623111,
+  "mean_entropy": 0.0011212804162795752,
+  "mean_context_std": 0.7599895184006962,
+  "mean_ms_per_step": 2.179981894758698,
+  "total_efe": 1531,
+  "total_fallback": 0,
+  "total_empty_fallback": 0,
+  "total_wall_clock_seconds": 26.41
+}

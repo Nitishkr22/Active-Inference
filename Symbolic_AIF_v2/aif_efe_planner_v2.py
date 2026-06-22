@@ -80,6 +80,18 @@ class EFEPlannerConfig:
 
     eps: float = 1e-8
 
+    # Adaptive precision weighting (epistemic exploration mechanism)
+    # When belief entropy is high the planner automatically shifts weight FROM
+    # goal-seeking (risk) TOWARDS information-seeking (epistemic terms).
+    # This is the core mechanism for genuine epistemic exploration in AIF.
+    # h_norm = min(current_entropy / adaptive_entropy_threshold, 1.0)
+    # eff_w_risk = w_risk * (1 - (1 - adaptive_risk_min_scale) * h_norm)
+    # eff_w_epistemic = w_epistemic * (1 + (adaptive_epistemic_boost - 1) * h_norm)
+    adaptive_precision: bool = True
+    adaptive_entropy_threshold: float = 0.10  # nats — above this epistemic mode activates
+    adaptive_risk_min_scale: float = 0.50     # w_risk halves at max uncertainty
+    adaptive_epistemic_boost: float = 6.0     # max multiplier on epistemic weights
+
 
 class EFEPlannerV2:
     """
@@ -391,6 +403,21 @@ class EFEPlannerV2:
 
         current_entropy = self.state_entropy_from_belief(row0, col0, hdg0)
 
+        # Adaptive precision: scale risk DOWN and epistemic UP under uncertainty.
+        # h_norm ∈ [0, 1] — 0 = well-localised, 1 = maximally uncertain.
+        if self.cfg.adaptive_precision and self.cfg.adaptive_entropy_threshold > 0.0:
+            h_norm = min(current_entropy / self.cfg.adaptive_entropy_threshold, 1.0)
+        else:
+            h_norm = 0.0
+        eff_w_risk = self.cfg.w_risk * (
+            1.0 - (1.0 - self.cfg.adaptive_risk_min_scale) * h_norm
+        )
+        eff_w_terminal_risk = self.cfg.w_terminal_risk * (1.0 - 0.25 * h_norm)
+        eff_w_context_uncertainty = self.cfg.w_context_uncertainty * (
+            1.0 + (self.cfg.adaptive_epistemic_boost - 1.0) * h_norm
+        )
+        eff_w_info_gain = self.cfg.w_info_gain * (1.0 + 2.0 * h_norm)
+
         ml_r0, ml_c0, ml_h0 = most_likely_state_from_belief(
             row0, col0, hdg0,
             self.reachable_mask.to(device),
@@ -431,14 +458,14 @@ class EFEPlannerV2:
             #  ambiguity instead, i.e. seek uncertain states.)
             info_gain = max(current_entropy - ambiguity, 0.0)
 
-            risk_sum += discount * self.cfg.w_risk * risk
+            risk_sum += discount * eff_w_risk * risk
             ambiguity_sum += discount * self.cfg.w_ambiguity * ambiguity
             collision_sum += discount * self.cfg.w_collision * coll_prob
-            info_gain_sum += discount * self.cfg.w_info_gain * info_gain
+            info_gain_sum += discount * eff_w_info_gain * info_gain
 
             # Context uncertainty epistemic bonus (V4)
             ctx_unc = self._context_uncertainty_bonus(context_logvar_roll, k)
-            context_uncertainty_sum += discount * self.cfg.w_context_uncertainty * ctx_unc
+            context_uncertainty_sum += discount * eff_w_context_uncertainty * ctx_unc
 
             # Decoder-based epistemic bonus (optional, expensive)
             context_k = roll["context_roll"][0, k:k+1, :]
@@ -494,7 +521,7 @@ class EFEPlannerV2:
 
             prev_action = a
 
-        terminal_risk = self.cfg.w_terminal_risk * final_risk
+        terminal_risk = eff_w_terminal_risk * final_risk
         min_risk = self.cfg.w_min_risk * min(risk_values) if len(risk_values) > 0 else 0.0
 
         efe = (
@@ -525,6 +552,8 @@ class EFEPlannerV2:
             "info_gain": float(info_gain_sum),
             "context_uncertainty": float(context_uncertainty_sum),
             "decoder_epistemic": float(decoder_epistemic_sum),
+            "h_norm": float(h_norm),
+            "current_entropy": float(current_entropy),
             "action_cost": float(action_cost_sum),
             "inverse_cost": float(inverse_cost_sum),
             "ref_cost": float(ref_cost_sum),
