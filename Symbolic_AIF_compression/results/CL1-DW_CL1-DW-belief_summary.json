@@ -1,0 +1,25 @@
+{
+  "config": {
+    "checkpoint": "./checkpoints/CL1-DW/best_belief_model.pt",
+    "gru_hidden_dim": 128,
+    "encoder_feat_dim": 64,
+    "context_dim": 16,
+    "use_depthwise": true,
+    "total_params": 585042,
+    "inference_params": 231529,
+    "inference_size_mb": 0.8832,
+    "noise_sigma": 0.0,
+    "mask_fraction": 0.0
+  },
+  "num_trials": 100,
+  "success_rate": 0.51,
+  "collision_rate": 0.09,
+  "avg_steps_successful": 21.529411764705884,
+  "avg_steps_all": 50.18,
+  "mean_path_efficiency": 0.4459399493015553,
+  "mean_belief_error_rate": 0.31156998758037124,
+  "mean_entropy": 0.5233862432885414,
+  "mean_context_std": 0.2990498539714795,
+  "mean_ms_per_step": 2.447308038955805,
+  "total_wall_clock_s": 73.49
+}

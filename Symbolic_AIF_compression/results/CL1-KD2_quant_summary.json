@@ -1,0 +1,50 @@
+{
+  "checkpoint": "./checkpoints/CL1-KD2/best_model.pt",
+  "model_config": {
+    "gru_hidden_dim": 128,
+    "encoder_feat_dim": 64,
+    "context_dim": 16,
+    "use_depthwise": false
+  },
+  "trials": 50,
+  "noise_sigma": 0.0,
+  "mask_fraction": 0.0,
+  "results": [
+    {
+      "precision": "fp32",
+      "inference_params": 427598,
+      "model_size_kb": 1670.3,
+      "success_rate": 0.9,
+      "collision_rate": 0.0,
+      "avg_steps_success": 14.511111111111111,
+      "mean_path_efficiency": 0.6507277039137541,
+      "mean_belief_error_rate": 0.08802128667312407,
+      "mean_entropy": 0.32462256972033804,
+      "mean_ms_per_step": 1.3618262678246973
+    },
+    {
+      "precision": "fp16",
+      "inference_params": 427598,
+      "model_size_kb": 835.15,
+      "success_rate": 0.9,
+      "collision_rate": 0.0,
+      "avg_steps_success": 14.422222222222222,
+      "mean_path_efficiency": 0.653278574942886,
+      "mean_belief_error_rate": 0.08929081424699946,
+      "mean_entropy": 0.32526201962399093,
+      "mean_ms_per_step": 13.204046833232765
+    },
+    {
+      "precision": "int8",
+      "inference_params": 391664,
+      "model_size_kb": 382.48,
+      "success_rate": 0.96,
+      "collision_rate": 0.0,
+      "avg_steps_success": 15.895833333333334,
+      "mean_path_efficiency": 0.6211534172609846,
+      "mean_belief_error_rate": 0.08344733526570655,
+      "mean_entropy": 0.32841326280113536,
+      "mean_ms_per_step": 1.813052472517711
+    }
+  ]
+}

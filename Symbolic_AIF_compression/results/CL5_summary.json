@@ -1,0 +1,25 @@
+{
+  "config": {
+    "checkpoint": "./checkpoints/CL5/best_model.pt",
+    "gru_hidden_dim": 16,
+    "encoder_feat_dim": 8,
+    "context_dim": 4,
+    "use_depthwise": false,
+    "total_params": 98685,
+    "inference_params": 9328,
+    "inference_size_mb": 0.0356,
+    "noise_sigma": 0.0,
+    "mask_fraction": 0.0
+  },
+  "num_trials": 100,
+  "success_rate": 0.03,
+  "collision_rate": 0.76,
+  "avg_steps_successful": 43.666666666666664,
+  "avg_steps_all": 78.91,
+  "mean_path_efficiency": 0.15382395382395384,
+  "mean_belief_error_rate": 0.9686150793650793,
+  "mean_entropy": 2.7415463395987194,
+  "mean_context_std": 0.5968056433538853,
+  "mean_ms_per_step": 1.767913675644658,
+  "total_wall_clock_s": 94.62
+}

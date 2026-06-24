@@ -1,0 +1,599 @@
+Video → /home/nitish/Documents/AIF_code/Active-Inference/Symbolic_AIF_v6/habitat_adapter/../results/aif_explore_nav_20260624_002631.mp4
+Log   → /home/nitish/Documents/AIF_code/Active-Inference/Symbolic_AIF_v6/habitat_adapter/../results/aif_explore_nav_20260624_002631.txt
+
+Device : cuda
+WorldModelV6 : 248,064 params
+Navmesh      : (214, 158)
+
+Start pose (V6) : (-2.82, -4.89, 0.0°)
+
+Wall-follow explorer ready  (SEEK E → N → W → S)
+
+Step |    Phase |  Action |               Pose (x, y, θ) | GoalDist | Slots |    ms
+-------------------------------------------------------------------------------------
+       [WF-SEEK(E) → FORWARD]
+   1 |  EXPLORE | FORWARD | ( -2.82,  -4.89,   0.0°) |      nan |     1 |   547
+       [wall-penalty=3.91]
+       [WF-SEEK(E) → FORWARD]
+   2 |  EXPLORE | FORWARD | ( -2.57,  -4.89,   0.0°) |      nan |     1 |    94
+       [wall-penalty=4.93]
+       [WF-SEEK(E) → FORWARD]
+   3 |  EXPLORE | FORWARD | ( -2.32,  -4.89,   0.0°) |      nan |     1 |    55
+       [wall-penalty=5.00]
+       [WF-SEEK(E) → FORWARD]
+   4 |  EXPLORE | FORWARD | ( -2.20,  -4.89,   0.0°) |      nan |     1 |    58
+       [wall-penalty=4.98]
+       [collision]
+       [WF-FOLLOW(E) → TURN_L]
+   5 |  EXPLORE |  TURN_L | ( -2.20,  -4.90,   0.0°) |      nan |     1 |    63
+       [wall-penalty=4.98]
+       [WF-FOLLOW(E) → TURN_L]
+   6 |  EXPLORE |  TURN_L | ( -2.20,  -4.80,  30.0°) |      nan |     1 |    65
+       [wall-penalty=4.99]
+       [WF-FOLLOW(E) → TURN_L]
+   7 |  EXPLORE |  TURN_L | ( -2.20,  -4.80,  60.0°) |      nan |     2 |    86
+       [wall-penalty=9.74]
+       [WF-FOLLOW(E) → FORWARD]
+   8 |  EXPLORE | FORWARD | ( -2.20,  -4.71,  90.0°) |      nan |     3 |    81
+       [wall-penalty=6.33]
+       [WF-FOLLOW(E) → FORWARD]
+   9 |  EXPLORE | FORWARD | ( -2.21,  -4.46,  90.0°) |      nan |     5 |    82
+       [wall-penalty=10.67]
+       [WF-FOLLOW(E) → FORWARD]
+  10 |  EXPLORE | FORWARD | ( -2.16,  -4.21,  90.0°) |      nan |     5 |    81
+       [wall-penalty=13.93]
+       [WF-FOLLOW(E) → TURN_R]
+  11 |  EXPLORE |  TURN_R | ( -2.13,  -3.94,  90.0°) |      nan |     5 |    76
+       [wall-penalty=10.01]
+       [WF-FOLLOW(E) → FORWARD]
+  12 |  EXPLORE | FORWARD | ( -2.08,  -3.97,  60.0°) |      nan |     5 |    68
+       [wall-penalty=13.13]
+       [WF-FOLLOW(E) → FORWARD]
+  13 |  EXPLORE | FORWARD | ( -2.12,  -3.82,  60.0°) |      nan |     5 |    65
+       [wall-penalty=14.51]
+       [WF-FOLLOW(E) → FORWARD]
+  14 |  EXPLORE | FORWARD | ( -2.19,  -3.71,  60.0°) |      nan |     5 |    67
+       [wall-penalty=14.29]
+       [WF-FOLLOW(E) → FORWARD]
+  15 |  EXPLORE | FORWARD | ( -2.26,  -3.61,  60.0°) |      nan |     5 |    70
+       [wall-penalty=14.12]
+       [WF-FOLLOW(E) → TURN_R]
+  16 |  EXPLORE |  TURN_R | ( -2.26,  -3.38,  60.0°) |      nan |     5 |    73
+       [wall-penalty=13.12]
+       [WF-FOLLOW(E) → FORWARD]
+  17 |  EXPLORE | FORWARD | ( -2.22,  -3.36,  30.0°) |      nan |     5 |    60
+       [wall-penalty=12.92]
+       [WF-FOLLOW(E) → FORWARD]
+  18 |  EXPLORE | FORWARD | ( -2.23,  -3.25,  30.0°) |      nan |     5 |    59
+       [wall-penalty=12.23]
+       [WF-FOLLOW(E) → FORWARD]
+  19 |  EXPLORE | FORWARD | ( -2.23,  -3.13,  30.0°) |      nan |     5 |    56
+       [wall-penalty=11.42]
+       [WF-FOLLOW(E) → FORWARD]
+  20 |  EXPLORE | FORWARD | ( -2.24,  -3.02,  30.0°) |      nan |     5 |    56
+       [wall-penalty=10.53]
+       [WF-FOLLOW(E) → TURN_R]
+  21 |  EXPLORE |  TURN_R | ( -2.24,  -2.91,  30.0°) |      nan |     6 |    59
+       [wall-penalty=14.33]
+       [WF-FOLLOW(E) → FORWARD]
+  22 |  EXPLORE | FORWARD | ( -2.24,  -2.91,  -0.0°) |      nan |     6 |    57
+       [wall-penalty=14.57]
+       [collision]
+       [WF-FOLLOW(E) → TURN_L]
+  23 |  EXPLORE |  TURN_L | ( -2.24,  -2.92,  -0.0°) |      nan |     6 |    59
+       [wall-penalty=14.69]
+       [WF-FOLLOW(E) → FORWARD]
+  24 |  EXPLORE | FORWARD | ( -2.24,  -2.92,  30.0°) |      nan |     6 |    57
+       [wall-penalty=14.69]
+       [WF-FOLLOW(E) → FORWARD]
+  25 |  EXPLORE | FORWARD | ( -2.25,  -2.81,  30.0°) |      nan |     6 |    63
+       [wall-penalty=13.63]
+       [WF-FOLLOW(E) → FORWARD]
+  26 |  EXPLORE | FORWARD | ( -2.25,  -2.70,  30.0°) |      nan |     6 |    69
+       [wall-penalty=12.62]
+       [WF-FOLLOW(E) → TURN_R]
+  27 |  EXPLORE |  TURN_R | ( -2.26,  -2.60,  30.0°) |      nan |     7 |    73
+       [wall-penalty=11.65]
+       [WF-FOLLOW(E) → FORWARD]
+  28 |  EXPLORE | FORWARD | ( -2.26,  -2.60,   0.0°) |      nan |     7 |    65
+       [wall-penalty=11.65]
+       [WF-FOLLOW(E) → FORWARD]
+  29 |  EXPLORE | FORWARD | ( -2.24,  -2.56,   0.0°) |      nan |     7 |    68
+       [wall-penalty=11.29]
+       [WF-FOLLOW(E) → FORWARD]
+  30 |  EXPLORE | FORWARD | ( -2.21,  -2.48,   0.0°) |      nan |     7 |    54
+       [wall-penalty=10.56]
+       [WF-FOLLOW(E) → FORWARD]
+  31 |  EXPLORE | FORWARD | ( -2.11,  -2.48,   0.0°) |      nan |     7 |    53
+       [wall-penalty=10.27]
+       [collision]
+       [WF-FOLLOW(E) → TURN_L]
+  32 |  EXPLORE |  TURN_L | ( -2.11,  -2.48,   0.0°) |      nan |     7 |    58
+       [wall-penalty=10.27]
+       [WF-FOLLOW(E) → FORWARD]
+  33 |  EXPLORE | FORWARD | ( -2.12,  -2.41,  30.0°) |      nan |     7 |    63
+       [wall-penalty=9.74]
+       [WF-FOLLOW(E) → FORWARD]
+  34 |  EXPLORE | FORWARD | ( -2.14,  -2.21,  30.0°) |      nan |     7 |    58
+       [wall-penalty=8.03]
+       [WF-FOLLOW(E) → FORWARD]
+  35 |  EXPLORE | FORWARD | ( -2.14,  -2.09,  30.0°) |      nan |     7 |    56
+       [wall-penalty=7.01]
+       [WF-FOLLOW(E) → TURN_R]
+  36 |  EXPLORE |  TURN_R | ( -2.15,  -1.97,  30.0°) |      nan |     7 |    56
+       [wall-penalty=6.02]
+       [WF-ALIGN(N) → TURN_L]
+  37 |  EXPLORE |  TURN_L | ( -2.15,  -1.97,   0.0°) |      nan |     7 |    55
+       [wall-penalty=6.02]
+       [WF-ALIGN(N) → TURN_L]
+  38 |  EXPLORE |  TURN_L | ( -2.15,  -1.97,  30.0°) |      nan |     7 |    56
+       [wall-penalty=6.02]
+       [WF-ALIGN(N) → TURN_L]
+  39 |  EXPLORE |  TURN_L | ( -2.15,  -1.97,  60.0°) |      nan |     8 |    69
+       [wall-penalty=11.02]
+       [WF-SEEK(N) → FORWARD]
+  40 |  EXPLORE | FORWARD | ( -2.15,  -1.97,  90.0°) |      nan |     8 |    77
+       [wall-penalty=11.02]
+       [WF-SEEK(N) → FORWARD]
+  41 |  EXPLORE | FORWARD | ( -2.15,  -1.70,  90.0°) |      nan |     8 |    77
+       [wall-penalty=8.93]
+       [WF-SEEK(N) → FORWARD]
+  42 |  EXPLORE | FORWARD | ( -2.16,  -1.38,  90.0°) |      nan |     8 |    77
+       [wall-penalty=6.82]
+       [WF-SEEK(N) → FORWARD]
+  43 |  EXPLORE | FORWARD | ( -2.16,  -1.13,  90.0°) |      nan |     9 |    77
+       [wall-penalty=10.05]
+       [WF-SEEK(N) → FORWARD]
+  44 |  EXPLORE | FORWARD | ( -2.17,  -0.88,  90.0°) |      nan |     9 |    71
+       [wall-penalty=8.52]
+       [WF-SEEK(N) → FORWARD]
+  45 |  EXPLORE | FORWARD | ( -2.17,  -0.57,  90.0°) |      nan |     9 |    61
+       [wall-penalty=7.02]
+       [WF-SEEK(N) → FORWARD]
+  46 |  EXPLORE | FORWARD | ( -2.18,  -0.32,  90.0°) |      nan |    10 |    65
+       [wall-penalty=8.45]
+       [WF-SEEK(N) → FORWARD]
+  47 |  EXPLORE | FORWARD | ( -2.19,  -0.02,  90.0°) |      nan |    11 |    70
+       [wall-penalty=10.32]
+       [WF-SEEK(N) → FORWARD]
+  48 |  EXPLORE | FORWARD | ( -2.19,   0.23,  90.0°) |      nan |    11 |    63
+       [wall-penalty=10.72]
+       [WF-SEEK(N) → FORWARD]
+  49 |  EXPLORE | FORWARD | ( -2.17,   0.48,  90.0°) |      nan |    11 |    69
+       [wall-penalty=9.52]
+       [WF-SEEK(N) → FORWARD]
+  50 |  EXPLORE | FORWARD | ( -2.19,   0.73,  90.0°) |      nan |    11 |    71
+       [wall-penalty=7.70]
+       [WF-SEEK(N) → FORWARD]
+  51 |  EXPLORE | FORWARD | ( -2.23,   0.98,  90.0°) |      nan |    11 |    68
+       [wall-penalty=6.58]
+       [WF-SEEK(N) → FORWARD]
+  52 |  EXPLORE | FORWARD | ( -2.29,   1.30,  90.0°) |      nan |    11 |    58
+       [wall-penalty=4.93]
+       [WF-SEEK(N) → FORWARD]
+  53 |  EXPLORE | FORWARD | ( -2.30,   1.56,  90.0°) |      nan |    11 |    54
+       [wall-penalty=3.61]
+       [collision]
+       [WF-FOLLOW(N) → TURN_L]
+  54 |  EXPLORE |  TURN_L | ( -2.30,   1.59,  90.0°) |      nan |    11 |    57
+       [wall-penalty=3.42]
+       [WF-FOLLOW(N) → TURN_L]
+  55 |  EXPLORE |  TURN_L | ( -2.30,   1.59, 120.0°) |      nan |    11 |    54
+       [wall-penalty=3.42]
+       [WF-FOLLOW(N) → TURN_L]
+  56 |  EXPLORE |  TURN_L | ( -2.30,   1.59, 150.0°) |      nan |    11 |    58
+       [wall-penalty=4.59]
+       [WF-FOLLOW(N) → FORWARD]
+  57 |  EXPLORE | FORWARD | ( -2.30,   1.59, -180.0°) |      nan |    11 |    71
+       [wall-penalty=4.59]
+       [WF-FOLLOW(N) → FORWARD]
+  58 |  EXPLORE | FORWARD | ( -2.55,   1.59, -180.0°) |      nan |    11 |    71
+       [wall-penalty=3.10]
+       [WF-FOLLOW(N) → FORWARD]
+  59 |  EXPLORE | FORWARD | ( -2.80,   1.59, -180.0°) |      nan |    11 |    66
+       [wall-penalty=2.18]
+       [WF-FOLLOW(N) → TURN_R]
+  60 |  EXPLORE |  TURN_R | ( -3.05,   1.59, -180.0°) |      nan |    11 |    67
+       [wall-penalty=1.81]
+       [WF-FOLLOW(N) → FORWARD]
+  61 |  EXPLORE | FORWARD | ( -3.05,   1.59, 150.0°) |      nan |    11 |    56
+       [wall-penalty=1.46]
+       [WF-FOLLOW(N) → FORWARD]
+  62 |  EXPLORE | FORWARD | ( -3.27,   1.59, 150.0°) |      nan |    11 |    57
+       [wall-penalty=1.20]
+       [WF-FOLLOW(N) → FORWARD]
+  63 |  EXPLORE | FORWARD | ( -3.48,   1.59, 150.0°) |      nan |    11 |    54
+       [WF-FOLLOW(N) → FORWARD]
+  64 |  EXPLORE | FORWARD | ( -3.70,   1.59, 150.0°) |      nan |    11 |    55
+       [WF-FOLLOW(N) → TURN_R]
+  65 |  EXPLORE |  TURN_R | ( -3.92,   1.59, 150.0°) |      nan |    11 |    54
+       [WF-FOLLOW(N) → FORWARD]
+  66 |  EXPLORE | FORWARD | ( -3.92,   1.59, 120.0°) |      nan |    11 |    55
+       [WF-FOLLOW(N) → FORWARD]
+  67 |  EXPLORE | FORWARD | ( -4.04,   1.59, 120.0°) |      nan |    11 |    54
+       [WF-FOLLOW(N) → FORWARD]
+  68 |  EXPLORE | FORWARD | ( -4.17,   1.59, 120.0°) |      nan |    11 |    55
+       [WF-FOLLOW(N) → FORWARD]
+  69 |  EXPLORE | FORWARD | ( -4.29,   1.59, 120.0°) |      nan |    11 |    54
+       [WF-FOLLOW(N) → TURN_R]
+  70 |  EXPLORE |  TURN_R | ( -4.42,   1.59, 120.0°) |      nan |    11 |    55
+       [WF-FOLLOW(N) → FORWARD]
+  71 |  EXPLORE | FORWARD | ( -4.42,   1.59,  90.0°) |      nan |    11 |    55
+       [collision]
+       [WF-FOLLOW(N) → TURN_L]
+  72 |  EXPLORE |  TURN_L | ( -4.42,   1.59,  90.0°) |      nan |    11 |    61
+       [WF-FOLLOW(N) → FORWARD]
+  73 |  EXPLORE | FORWARD | ( -4.42,   1.59, 120.0°) |      nan |    11 |    55
+       [WF-FOLLOW(N) → FORWARD]
+  74 |  EXPLORE | FORWARD | ( -4.54,   1.59, 120.0°) |      nan |    11 |    53
+       [WF-FOLLOW(N) → FORWARD]
+  75 |  EXPLORE | FORWARD | ( -4.67,   1.59, 120.0°) |      nan |    11 |    56
+       [WF-FOLLOW(N) → TURN_R]
+  76 |  EXPLORE |  TURN_R | ( -4.79,   1.59, 120.0°) |      nan |    11 |    58
+       [WF-FOLLOW(N) → FORWARD]
+  77 |  EXPLORE | FORWARD | ( -4.79,   1.59,  90.0°) |      nan |    11 |    58
+       [collision]
+       [WF-FOLLOW(N) → TURN_L]
+  78 |  EXPLORE |  TURN_L | ( -4.79,   1.59,  90.0°) |      nan |    11 |    58
+       [WF-FOLLOW(N) → FORWARD]
+  79 |  EXPLORE | FORWARD | ( -4.79,   1.59, 120.0°) |      nan |    11 |    55
+       [WF-FOLLOW(N) → FORWARD]
+  80 |  EXPLORE | FORWARD | ( -4.92,   1.59, 120.0°) |      nan |    11 |    54
+       [collision]
+
+============================================================
+  EXPLORATION COMPLETE at step 81  (11 active slots in belief map)
+  Switching to NAVIGATION phase...
+  Goal (V6)    : (-1.04, 0.71)
+  Waypoints    : 2
+    wp[0] = (-2.05, 0.46)
+    wp[1] = (-1.04, 0.71)
+============================================================
+
+  81 | NAVIGATE |  TURN_R | ( -4.94,   1.59, 120.0°) |    4.001 |    11 |    86
+  82 | NAVIGATE |  TURN_R | ( -4.94,   1.59,  90.0°) |    4.001 |    11 |    56
+  83 | NAVIGATE |  TURN_R | ( -4.94,   1.59,  60.0°) |    4.001 |    11 |    55
+  84 | NAVIGATE | FORWARD | ( -5.10,   1.43,  30.0°) |    4.120 |    11 |    66
+  85 | NAVIGATE | FORWARD | ( -4.94,   1.47,  30.0°) |    3.973 |    11 |    63
+  86 | NAVIGATE |  TURN_R | ( -4.78,   1.51,  30.0°) |    3.823 |    11 |    62
+  87 | NAVIGATE | FORWARD | ( -4.79,   1.59,   0.0°) |    3.848 |    11 |    71
+  88 | NAVIGATE | FORWARD | ( -4.54,   1.59,   0.0°) |    3.605 |    12 |    69
+       [wall-penalty=1.12]
+  89 | NAVIGATE |  TURN_R | ( -4.32,   1.65,   0.0°) |    3.415 |    13 |    72
+       [wall-penalty=1.26]
+  90 | NAVIGATE | FORWARD | ( -4.35,   1.69, -30.0°) |    3.453 |    13 |    82
+       [wall-penalty=1.97]
+  91 | NAVIGATE | FORWARD | ( -4.16,   1.59, -30.0°) |    3.241 |    13 |    85
+       [wall-penalty=3.06]
+       [VIA-DOOR activated → doorway at (-2.17, 0.24)]
+  92 | NAVIGATE | FORWARD | ( -3.96,   1.51, -30.0°) |    3.028 |    15 |    90 [VIA-DOOR]
+       [wall-penalty=4.41]
+  93 | NAVIGATE | FORWARD | ( -3.76,   1.39, -30.0°) |    1.965 |    15 |    89 [VIA-DOOR]
+       [wall-penalty=6.05]
+  94 | NAVIGATE | FORWARD | ( -3.55,   1.32, -30.0°) |    1.747 |    18 |    89 [VIA-DOOR]
+       [wall-penalty=11.71]
+  95 | NAVIGATE | FORWARD | ( -3.34,   1.21, -30.0°) |    1.517 |    18 |    92 [VIA-DOOR]
+       [wall-penalty=9.11]
+       [final-approach: h_err=49° → TURN_L]
+  96 | NAVIGATE |  TURN_L | ( -3.11,   1.12, -30.0°) |    1.284 |    19 |    89 [VIA-DOOR]
+       [wall-penalty=9.13]
+       [final-approach: h_err=19° → FORWARD]
+  97 | NAVIGATE | FORWARD | ( -3.11,   1.13,   0.0°) |    1.294 |    20 |    89 [VIA-DOOR]
+       [wall-penalty=13.24]
+       [final-approach: h_err=32° → TURN_L]
+  98 | NAVIGATE |  TURN_L | ( -2.86,   1.15,   0.0°) |    1.137 |    20 |    89 [VIA-DOOR]
+       [wall-penalty=11.39]
+       [final-approach: h_err=2° → FORWARD]
+  99 | NAVIGATE | FORWARD | ( -2.85,   1.12,  30.0°) |    1.108 |    21 |    88 [VIA-DOOR]
+       [wall-penalty=9.66]
+       [final-approach: h_err=6° → FORWARD]
+ 100 | NAVIGATE | FORWARD | ( -2.66,   1.24,  30.0°) |    1.110 |    21 |    88 [VIA-DOOR]
+       [wall-penalty=11.44]
+       [final-approach: h_err=176° → TURN_L]
+ 101 | NAVIGATE |  TURN_L | ( -2.45,   1.36,  30.0°) |    1.151 |    21 |    83 [VIA-DOOR]
+       [wall-penalty=12.25]
+       [final-approach: h_err=146° → TURN_L]
+ 102 | NAVIGATE |  TURN_L | ( -2.39,   1.37,  60.0°) |    1.148 |    21 |    74 [VIA-DOOR]
+       [wall-penalty=9.85]
+       [final-approach: h_err=116° → TURN_L]
+ 103 | NAVIGATE |  TURN_L | ( -2.41,   1.35,  90.0°) |    1.128 |    21 |    73 [VIA-DOOR]
+       [wall-penalty=9.76]
+       [final-approach: h_err=86° → TURN_L]
+ 104 | NAVIGATE |  TURN_L | ( -2.43,   1.31, 120.0°) |    1.098 |    21 |    61 [VIA-DOOR]
+       [wall-penalty=8.28]
+       [final-approach: h_err=56° → TURN_L]
+ 105 | NAVIGATE |  TURN_L | ( -2.43,   1.31, 150.0°) |    1.098 |    21 |    68 [VIA-DOOR]
+       [wall-penalty=8.78]
+       [final-approach: h_err=26° → FORWARD]
+ 106 | NAVIGATE | FORWARD | ( -2.43,   1.31, -180.0°) |    1.098 |    22 |    76 [VIA-DOOR]
+       [wall-penalty=11.00]
+       [final-approach: h_err=149° → TURN_L]
+ 107 | NAVIGATE |  TURN_L | ( -2.68,   1.31, -180.0°) |    1.182 |    22 |    76 [VIA-DOOR]
+       [wall-penalty=8.58]
+       [final-approach: h_err=119° → TURN_L]
+ 108 | NAVIGATE |  TURN_L | ( -2.65,   1.32, -150.0°) |    1.174 |    23 |    81 [VIA-DOOR]
+       [wall-penalty=9.90]
+       [final-approach: h_err=89° → TURN_L]
+ 109 | NAVIGATE |  TURN_L | ( -2.65,   1.35, -120.0°) |    1.210 |    25 |    90 [VIA-DOOR]
+       [wall-penalty=12.31]
+       [final-approach: h_err=59° → TURN_L]
+ 110 | NAVIGATE |  TURN_L | ( -2.65,   1.35, -90.0°) |    1.210 |    25 |    91 [VIA-DOOR]
+       [wall-penalty=13.17]
+       [final-approach: h_err=29° → FORWARD]
+ 111 | NAVIGATE | FORWARD | ( -2.65,   1.43, -60.0°) |    1.276 |    31 |    90 [VIA-DOOR]
+       [wall-penalty=19.72]
+       [final-approach: h_err=154° → TURN_L]
+ 112 | NAVIGATE |  TURN_L | ( -2.53,   1.21, -60.0°) |    1.030 |    31 |    90 [VIA-DOOR]
+       [wall-penalty=17.47]
+       [final-approach: h_err=124° → TURN_L]
+ 113 | NAVIGATE |  TURN_L | ( -2.53,   1.25, -30.0°) |    1.063 |    31 |    89 [VIA-DOOR]
+       [wall-penalty=15.50]
+       [final-approach: h_err=94° → TURN_L]
+ 114 | NAVIGATE |  TURN_L | ( -2.52,   1.24,   0.0°) |    1.059 |    33 |    87 [VIA-DOOR]
+       [wall-penalty=15.56]
+       [final-approach: h_err=64° → TURN_L]
+ 115 | NAVIGATE |  TURN_L | ( -2.49,   1.23,  30.0°) |    1.042 |    33 |    91 [VIA-DOOR]
+       [wall-penalty=14.76]
+       [final-approach: h_err=34° → TURN_L]
+ 116 | NAVIGATE |  TURN_L | ( -2.49,   1.24,  60.0°) |    1.041 |    33 |    81 [VIA-DOOR]
+       [wall-penalty=11.59]
+       [final-approach: h_err=4° → FORWARD]
+ 117 | NAVIGATE | FORWARD | ( -2.56,   1.23,  90.0°) |    1.060 |    33 |    73 [VIA-DOOR]
+       [wall-penalty=10.92]
+       [final-approach: h_err=173° → TURN_L]
+ 118 | NAVIGATE |  TURN_L | ( -2.56,   1.48,  90.0°) |    1.296 |    33 |    57 [VIA-DOOR]
+       [wall-penalty=8.27]
+       [final-approach: h_err=143° → TURN_L]
+ 119 | NAVIGATE |  TURN_L | ( -2.56,   1.48, 120.0°) |    1.296 |    33 |    55 [VIA-DOOR]
+       [wall-penalty=6.72]
+       [final-approach: h_err=113° → TURN_L]
+ 120 | NAVIGATE |  TURN_L | ( -2.56,   1.48, 150.0°) |    1.296 |    33 |    65 [VIA-DOOR]
+       [wall-penalty=7.92]
+       [final-approach: h_err=83° → TURN_L]
+ 121 | NAVIGATE |  TURN_L | ( -2.54,   1.48, -180.0°) |    1.288 |    33 |    77 [VIA-DOOR]
+       [wall-penalty=8.75]
+       [final-approach: h_err=53° → TURN_L]
+ 122 | NAVIGATE |  TURN_L | ( -2.50,   1.48, -150.0°) |    1.283 |    33 |    84 [VIA-DOOR]
+       [wall-penalty=12.90]
+       [final-approach: h_err=23° → FORWARD]
+ 123 | NAVIGATE | FORWARD | ( -2.47,   1.48, -120.0°) |    1.276 |    35 |    93 [VIA-DOOR]
+       [wall-penalty=15.29]
+       [final-approach: h_err=166° → TURN_L]
+ 124 | NAVIGATE |  TURN_L | ( -2.60,   1.30, -120.0°) |    1.140 |    35 |    92 [VIA-DOOR]
+       [wall-penalty=12.43]
+       [final-approach: h_err=136° → TURN_L]
+ 125 | NAVIGATE |  TURN_L | ( -2.64,   1.31, -90.0°) |    1.160 |    35 |    88 [VIA-DOOR]
+       [wall-penalty=13.93]
+       [final-approach: h_err=106° → TURN_L]
+ 126 | NAVIGATE |  TURN_L | ( -2.64,   1.30, -60.0°) |    1.159 |    35 |    90 [VIA-DOOR]
+       [wall-penalty=15.98]
+       [final-approach: h_err=76° → TURN_L]
+ 127 | NAVIGATE |  TURN_L | ( -2.62,   1.28, -30.0°) |    1.132 |    35 |    88 [VIA-DOOR]
+       [wall-penalty=13.26]
+       [final-approach: h_err=46° → TURN_L]
+ 128 | NAVIGATE |  TURN_L | ( -2.61,   1.28,   0.0°) |    1.126 |    36 |    91 [VIA-DOOR]
+       [wall-penalty=15.60]
+       [final-approach: h_err=16° → FORWARD]
+ 129 | NAVIGATE | FORWARD | ( -2.61,   1.26,  30.0°) |    1.104 |    36 |    88 [VIA-DOOR]
+       [wall-penalty=17.53]
+       [final-approach: h_err=155° → TURN_L]
+ 130 | NAVIGATE |  TURN_L | ( -2.38,   1.38,  30.0°) |    1.155 |    36 |    88 [VIA-DOOR]
+       [wall-penalty=18.28]
+       [final-approach: h_err=125° → TURN_L]
+ 131 | NAVIGATE |  TURN_L | ( -2.37,   1.35,  60.0°) |    1.127 |    36 |    85 [VIA-DOOR]
+       [wall-penalty=14.58]
+       [final-approach: h_err=95° → TURN_L]
+ 132 | NAVIGATE |  TURN_L | ( -2.44,   1.35,  90.0°) |    1.134 |    36 |    77 [VIA-DOOR]
+       [wall-penalty=13.75]
+       [final-approach: h_err=65° → TURN_L]
+ 133 | NAVIGATE |  TURN_L | ( -2.45,   1.32, 120.0°) |    1.111 |    36 |    62 [VIA-DOOR]
+       [wall-penalty=11.65]
+       [final-approach: h_err=35° → TURN_L]
+ 134 | NAVIGATE |  TURN_L | ( -2.45,   1.32, 150.0°) |    1.111 |    36 |    69 [VIA-DOOR]
+       [wall-penalty=13.41]
+       [final-approach: h_err=5° → FORWARD]
+ 135 | NAVIGATE | FORWARD | ( -2.42,   1.29, -180.0°) |    1.078 |    36 |    77 [VIA-DOOR]
+       [wall-penalty=16.81]
+       [final-approach: h_err=177° → TURN_L]
+ 136 | NAVIGATE |  TURN_L | ( -2.71,   1.29, -180.0°) |    1.178 |    36 |    78 [VIA-DOOR]
+       [wall-penalty=12.61]
+       [final-approach: h_err=147° → TURN_L]
+ 137 | NAVIGATE |  TURN_L | ( -2.68,   1.29, -150.0°) |    1.165 |    36 |    83 [VIA-DOOR]
+       [wall-penalty=16.02]
+       [final-approach: h_err=117° → TURN_L]
+ 138 | NAVIGATE |  TURN_L | ( -2.66,   1.31, -120.0°) |    1.177 |    36 |    92 [VIA-DOOR]
+       [wall-penalty=19.80]
+       [final-approach: h_err=87° → TURN_L]
+ 139 | NAVIGATE |  TURN_L | ( -2.66,   1.37, -90.0°) |    1.223 |    38 |    90 [VIA-DOOR]
+       [wall-penalty=14.79]
+       [final-approach: h_err=57° → TURN_L]
+ 140 | NAVIGATE |  TURN_L | ( -2.67,   1.37, -60.0°) |    1.232 |    38 |    93 [VIA-DOOR]
+       [wall-penalty=18.69]
+       [final-approach: h_err=27° → FORWARD]
+ 141 | NAVIGATE | FORWARD | ( -2.67,   1.38, -30.0°) |    1.238 |    38 |    90 [VIA-DOOR]
+       [wall-penalty=17.00]
+       [final-approach: h_err=151° → TURN_L]
+ 142 | NAVIGATE |  TURN_L | ( -2.47,   1.30, -30.0°) |    1.095 |    39 |    90 [VIA-DOOR]
+       [wall-penalty=19.09]
+       [final-approach: h_err=121° → TURN_L]
+ 143 | NAVIGATE |  TURN_L | ( -2.46,   1.32,   0.0°) |    1.117 |    39 |    89 [VIA-DOOR]
+       [wall-penalty=16.58]
+       [final-approach: h_err=91° → TURN_L]
+ 144 | NAVIGATE |  TURN_L | ( -2.45,   1.31,  30.0°) |    1.098 |    39 |    88 [VIA-DOOR]
+       [wall-penalty=19.14]
+       [final-approach: h_err=61° → TURN_L]
+ 145 | NAVIGATE |  TURN_L | ( -2.45,   1.30,  60.0°) |    1.098 |    39 |    84 [VIA-DOOR]
+       [wall-penalty=14.78]
+       [final-approach: h_err=31° → TURN_L]
+ 146 | NAVIGATE |  TURN_L | ( -2.51,   1.30,  90.0°) |    1.108 |    39 |    75 [VIA-DOOR]
+       [wall-penalty=14.01]
+       [final-approach: h_err=1° → FORWARD]
+ 147 | NAVIGATE | FORWARD | ( -2.48,   1.24, 120.0°) |    1.046 |    39 |    67 [VIA-DOOR]
+       [wall-penalty=12.45]
+       [final-approach: h_err=179° → TURN_L]
+ 148 | NAVIGATE |  TURN_L | ( -2.60,   1.46, 120.0°) |    1.291 |    39 |    56 [VIA-DOOR]
+       [wall-penalty=8.51]
+       [final-approach: h_err=149° → TURN_L]
+ 149 | NAVIGATE |  TURN_L | ( -2.60,   1.46, 150.0°) |    1.291 |    39 |    64 [VIA-DOOR]
+       [wall-penalty=9.28]
+       [final-approach: h_err=119° → TURN_L]
+ 150 | NAVIGATE |  TURN_L | ( -2.63,   1.46, -180.0°) |    1.300 |    39 |    76 [VIA-DOOR]
+       [wall-penalty=12.64]
+       [final-approach: h_err=89° → TURN_L]
+ 151 | NAVIGATE |  TURN_L | ( -2.59,   1.46, -150.0°) |    1.287 |    39 |    82 [VIA-DOOR]
+       [wall-penalty=15.90]
+       [final-approach: h_err=59° → TURN_L]
+ 152 | NAVIGATE |  TURN_L | ( -2.55,   1.45, -120.0°) |    1.264 |    39 |    89 [VIA-DOOR]
+       [wall-penalty=13.89]
+       [final-approach: h_err=29° → FORWARD]
+ 153 | NAVIGATE | FORWARD | ( -2.54,   1.45, -90.0°) |    1.266 |    40 |    88 [VIA-DOOR]
+       [wall-penalty=16.66]
+       [final-approach: h_err=160° → TURN_L]
+ 154 | NAVIGATE |  TURN_L | ( -2.56,   1.20, -90.0°) |    1.037 |    40 |    90 [VIA-DOOR]
+       [wall-penalty=19.18]
+       [final-approach: h_err=130° → TURN_L]
+ 155 | NAVIGATE |  TURN_L | ( -2.56,   1.21, -60.0°) |    1.041 |    40 |    88 [VIA-DOOR]
+       [wall-penalty=17.82]
+       [final-approach: h_err=100° → TURN_L]
+ 156 | NAVIGATE |  TURN_L | ( -2.60,   1.22, -30.0°) |    1.063 |    40 |    86 [VIA-DOOR]
+       [wall-penalty=20.15]
+       [final-approach: h_err=70° → TURN_L]
+ 157 | NAVIGATE |  TURN_L | ( -2.60,   1.22,   0.0°) |    1.064 |    40 |    88 [VIA-DOOR]
+       [wall-penalty=16.24]
+       [final-approach: h_err=40° → TURN_L]
+ 158 | NAVIGATE |  TURN_L | ( -2.60,   1.19,  30.0°) |    1.038 |    41 |    89 [VIA-DOOR]
+       [wall-penalty=20.18]
+       [final-approach: h_err=10° → FORWARD]
+ 159 | NAVIGATE | FORWARD | ( -2.57,   1.19,  60.0°) |    1.031 |    41 |    80 [VIA-DOOR]
+       [wall-penalty=20.40]
+       [final-approach: h_err=164° → TURN_L]
+ 160 | NAVIGATE |  TURN_L | ( -2.46,   1.41,  60.0°) |    1.199 |    41 |    80 [VIA-DOOR]
+       [wall-penalty=14.33]
+       [final-approach: h_err=134° → TURN_L]
+ 161 | NAVIGATE |  TURN_L | ( -2.49,   1.39,  90.0°) |    1.186 |    41 |    70 [VIA-DOOR]
+       [wall-penalty=14.01]
+       [final-approach: h_err=104° → TURN_L]
+ 162 | NAVIGATE |  TURN_L | ( -2.52,   1.36, 120.0°) |    1.165 |    41 |    65 [VIA-DOOR]
+       [wall-penalty=11.21]
+       [final-approach: h_err=74° → TURN_L]
+ 163 | NAVIGATE |  TURN_L | ( -2.52,   1.36, 150.0°) |    1.165 |    41 |    72 [VIA-DOOR]
+       [wall-penalty=13.09]
+       [final-approach: h_err=44° → TURN_L]
+ 164 | NAVIGATE |  TURN_L | ( -2.47,   1.36, -180.0°) |    1.151 |    41 |    75 [VIA-DOOR]
+       [wall-penalty=16.93]
+       [final-approach: h_err=14° → FORWARD]
+ 165 | NAVIGATE | FORWARD | ( -2.41,   1.36, -150.0°) |    1.138 |    41 |    85 [VIA-DOOR]
+       [wall-penalty=20.73]
+       [final-approach: h_err=172° → TURN_L]
+ 166 | NAVIGATE |  TURN_L | ( -2.60,   1.23, -150.0°) |    1.078 |    41 |    82 [VIA-DOOR]
+       [wall-penalty=16.01]
+       [final-approach: h_err=142° → TURN_L]
+ 167 | NAVIGATE |  TURN_L | ( -2.59,   1.23, -120.0°) |    1.071 |    41 |    98 [VIA-DOOR]
+       [wall-penalty=16.34]
+       [final-approach: h_err=112° → TURN_L]
+ 168 | NAVIGATE |  TURN_L | ( -2.61,   1.22, -90.0°) |    1.071 |    42 |    91 [VIA-DOOR]
+       [wall-penalty=18.61]
+       [final-approach: h_err=82° → TURN_L]
+ 169 | NAVIGATE |  TURN_L | ( -2.61,   1.22, -60.0°) |    1.076 |    42 |    96 [VIA-DOOR]
+       [wall-penalty=15.94]
+       [final-approach: h_err=52° → TURN_L]
+ 170 | NAVIGATE |  TURN_L | ( -2.62,   1.22, -30.0°) |    1.075 |    42 |    91 [VIA-DOOR]
+       [wall-penalty=18.34]
+       [final-approach: h_err=22° → FORWARD]
+ 171 | NAVIGATE | FORWARD | ( -2.61,   1.22,   0.0°) |    1.067 |    43 |    91 [VIA-DOOR]
+       [wall-penalty=16.06]
+       [final-approach: h_err=151° → TURN_L]
+ 172 | NAVIGATE |  TURN_L | ( -2.36,   1.22,   0.0°) |    0.997 |    43 |    92 [VIA-DOOR]
+       [wall-penalty=20.30]
+       [final-approach: h_err=121° → TURN_L]
+ 173 | NAVIGATE |  TURN_L | ( -2.37,   1.21,  30.0°) |    0.991 |    43 |    93 [VIA-DOOR]
+       [wall-penalty=17.14]
+       [final-approach: h_err=91° → TURN_L]
+ 174 | NAVIGATE |  TURN_L | ( -2.40,   1.21,  60.0°) |    0.991 |    43 |    87 [VIA-DOOR]
+       [wall-penalty=13.33]
+       [final-approach: h_err=61° → TURN_L]
+ 175 | NAVIGATE |  TURN_L | ( -2.48,   1.20,  90.0°) |    1.004 |    43 |    78 [VIA-DOOR]
+       [wall-penalty=17.09]
+       [final-approach: h_err=31° → TURN_L]
+ 176 | NAVIGATE |  TURN_L | ( -2.43,   1.14, 120.0°) |    0.936 |    43 |    72 [VIA-DOOR]
+       [wall-penalty=15.26]
+       [final-approach: h_err=1° → FORWARD]
+ 177 | NAVIGATE | FORWARD | ( -2.43,   1.14, 150.0°) |    0.936 |    43 |    74 [VIA-DOOR]
+       [wall-penalty=17.14]
+       [final-approach: h_err=179° → TURN_L]
+ 178 | NAVIGATE |  TURN_L | ( -2.65,   1.27, 150.0°) |    1.130 |    43 |    67 [VIA-DOOR]
+       [wall-penalty=12.33]
+       [final-approach: h_err=149° → TURN_L]
+ 179 | NAVIGATE |  TURN_L | ( -2.70,   1.27, -180.0°) |    1.156 |    43 |    83 [VIA-DOOR]
+       [wall-penalty=13.99]
+       [final-approach: h_err=119° → TURN_L]
+ 180 | NAVIGATE |  TURN_L | ( -2.68,   1.27, -150.0°) |    1.144 |    43 |    88 [VIA-DOOR]
+       [wall-penalty=16.81]
+       [final-approach: h_err=89° → TURN_L]
+ 181 | NAVIGATE |  TURN_L | ( -2.67,   1.27, -120.0°) |    1.137 |    43 |    97 [VIA-DOOR]
+       [wall-penalty=17.07]
+       [final-approach: h_err=59° → TURN_L]
+ 182 | NAVIGATE |  TURN_L | ( -2.66,   1.27, -90.0°) |    1.136 |    44 |    95 [VIA-DOOR]
+       [wall-penalty=17.19]
+       [final-approach: h_err=29° → FORWARD]
+ 183 | NAVIGATE | FORWARD | ( -2.67,   1.27, -60.0°) |    1.142 |    45 |    93 [VIA-DOOR]
+       [wall-penalty=14.58]
+       [final-approach: h_err=154° → TURN_L]
+ 184 | NAVIGATE |  TURN_L | ( -2.56,   1.05, -60.0°) |    0.896 |    45 |    90 [VIA-DOOR]
+       [wall-penalty=18.67]
+       [final-approach: h_err=124° → TURN_L]
+ 185 | NAVIGATE |  TURN_L | ( -2.57,   1.05, -30.0°) |    0.902 |    45 |    90 [VIA-DOOR]
+       [wall-penalty=18.54]
+       [final-approach: h_err=94° → TURN_L]
+ 186 | NAVIGATE |  TURN_L | ( -2.56,   1.06,   0.0°) |    0.902 |    45 |    87 [VIA-DOOR]
+       [wall-penalty=18.64]
+       [final-approach: h_err=64° → TURN_L]
+ 187 | NAVIGATE |  TURN_L | ( -2.52,   1.04,  30.0°) |    0.875 |    45 |    90 [VIA-DOOR]
+       [wall-penalty=16.72]
+       [final-approach: h_err=34° → TURN_L]
+ 188 | NAVIGATE |  TURN_L | ( -2.50,   1.05,  60.0°) |    0.867 |    45 |    82 [VIA-DOOR]
+       [wall-penalty=14.10]
+       [final-approach: h_err=4° → FORWARD]
+ 189 | NAVIGATE | FORWARD | ( -2.58,   1.04,  90.0°) |    0.895 |    45 |    73 [VIA-DOOR]
+       [wall-penalty=13.03]
+       [final-approach: h_err=173° → TURN_L]
+ 190 | NAVIGATE |  TURN_L | ( -2.58,   1.29,  90.0°) |    1.123 |    45 |    58 [VIA-DOOR]
+       [wall-penalty=10.03]
+       [final-approach: h_err=143° → TURN_L]
+ 191 | NAVIGATE |  TURN_L | ( -2.58,   1.29, 120.0°) |    1.123 |    45 |    56 [VIA-DOOR]
+       [wall-penalty=11.12]
+       [final-approach: h_err=113° → TURN_L]
+ 192 | NAVIGATE |  TURN_L | ( -2.58,   1.29, 150.0°) |    1.123 |    45 |    66 [VIA-DOOR]
+       [wall-penalty=13.03]
+       [final-approach: h_err=83° → TURN_L]
+ 193 | NAVIGATE |  TURN_L | ( -2.57,   1.29, -180.0°) |    1.117 |    45 |    77 [VIA-DOOR]
+       [wall-penalty=16.09]
+       [final-approach: h_err=53° → TURN_L]
+ 194 | NAVIGATE |  TURN_L | ( -2.53,   1.31, -150.0°) |    1.122 |    45 |    84 [VIA-DOOR]
+       [wall-penalty=19.11]
+       [final-approach: h_err=23° → FORWARD]
+ 195 | NAVIGATE | FORWARD | ( -2.50,   1.31, -120.0°) |    1.114 |    46 |    90 [VIA-DOOR]
+       [wall-penalty=19.71]
+       [final-approach: h_err=166° → TURN_L]
+ 196 | NAVIGATE |  TURN_L | ( -2.62,   1.09, -120.0°) |    0.960 |    46 |    90 [VIA-DOOR]
+       [wall-penalty=17.14]
+       [final-approach: h_err=136° → TURN_L]
+ 197 | NAVIGATE |  TURN_L | ( -2.66,   1.09, -90.0°) |    0.983 |    46 |    89 [VIA-DOOR]
+       [wall-penalty=18.94]
+       [final-approach: h_err=106° → TURN_L]
+ 198 | NAVIGATE |  TURN_L | ( -2.68,   1.08, -60.0°) |    0.980 |    46 |    91 [VIA-DOOR]
+       [wall-penalty=16.20]
+       [final-approach: h_err=76° → TURN_L]
+ 199 | NAVIGATE |  TURN_L | ( -2.64,   1.07, -30.0°) |    0.954 |    46 |    89 [VIA-DOOR]
+       [wall-penalty=19.59]
+       [final-approach: h_err=46° → TURN_L]
+ 200 | NAVIGATE |  TURN_L | ( -2.62,   1.06,   0.0°) |    0.931 |    47 |    88 [VIA-DOOR]
+       [wall-penalty=18.77]
+
+============================================================
+  Result         : TIMEOUT
+  Steps          : 200  (80 explore + 120 navigate)
+  Final slot count: 47
+  Final goal dist: 1.616m
+  Mean ms/step   : 76
+============================================================

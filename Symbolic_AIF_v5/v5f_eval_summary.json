@@ -11,9 +11,9 @@
   "mean_belief_error_rate": 0.08161679036477798,
   "mean_entropy": 0.0035470634527896634,
   "mean_context_std": 0.6879140911572571,
-  "mean_ms_per_step": 2.026602871611455,
+  "mean_ms_per_step": 1.998016543535491,
   "total_efe": 1600,
   "total_fallback": 0,
   "total_empty_fallback": 0,
-  "total_wall_clock_seconds": 25.55
+  "total_wall_clock_seconds": 24.23
 }

@@ -99,17 +99,34 @@ def main():
     print("OK")
 
     # ------------------------------------------------------------------ #
-    # 3. Reset episode + sample goal
+    # 3. Reset episode + sample a REACHABLE goal
     # ------------------------------------------------------------------ #
+    # Seed numpy before sample_goal so goal direction varies each run.
+    # The Habitat sim seed controls start position (via get_random_navigable_point).
+    _seed = random.randint(1, 1_000_000)
+    env.sim.seed(_seed)
+    np.random.seed(_seed % (2**31))
     rgb, depth, cam_to_v6, pose_v6, info = env.reset()
-    env.sim.seed(random.randint(1, 1_000_000))   # randomise goal each run
-    goal_v6 = env.sample_goal(min_dist=3.0, max_dist=8.0)
+
+    # Keep resampling until the pathfinder can actually find a path.
+    waypoints_v6: Optional[list] = None
+    for _attempt in range(20):
+        goal_v6 = env.sample_goal(min_dist=3.0, max_dist=8.0)
+        waypoints_v6 = env.get_path_waypoints(goal_v6, waypoint_spacing=1.0)
+        if waypoints_v6 is not None:
+            break
+        print(f"  [goal attempt {_attempt+1}: no path, resampling]")
+    if waypoints_v6 is None:
+        print("  [WARNING: no reachable goal found — navigating directly]")
+        waypoints_v6 = [goal_v6]
 
     print(f"\nStart pose (V6) : ({pose_v6[0]:.2f}, {pose_v6[1]:.2f}, "
           f"{math.degrees(pose_v6[2].item()):.1f}°)")
     print(f"Goal  (V6)      : ({goal_v6[0]:.2f}, {goal_v6[1]:.2f})")
-    geo_dist = env.goal_dist_habitat(goal_v6)
-    print(f"Geodesic dist   : {geo_dist:.2f}m")
+    print(f"Waypoints       : {len(waypoints_v6)}  "
+          f"(spacing ~1m along navigable path)")
+    for wi, wp in enumerate(waypoints_v6):
+        print(f"   wp[{wi}] = ({wp[0]:.2f}, {wp[1]:.2f})")
 
     # ------------------------------------------------------------------ #
     # 4. Initial belief  (pose is known at episode start)
@@ -117,9 +134,14 @@ def main():
     belief = model.initial_belief(device, known_pose=pose_v6.to(device))
 
     # ------------------------------------------------------------------ #
-    # 5. EFE planner
+    # 5. EFE planner  (initially targets the first waypoint past start)
     # ------------------------------------------------------------------ #
-    planner = EFEPlannerV4(model=model, goal_pos=goal_v6.to(device), cfg=cfg.efe)
+    wp_idx      = min(1, len(waypoints_v6) - 1)   # skip waypoint 0 (≈ start)
+    wp_advance  = 0.8                              # advance when within this dist
+    current_wp  = waypoints_v6[wp_idx]
+    planner = EFEPlannerV4(model=model, goal_pos=current_wp.to(device), cfg=cfg.efe)
+    print(f"\nNavigating via {len(waypoints_v6)} waypoints "
+          f"(EFE targets wp[{wp_idx}] first)")
 
     # ------------------------------------------------------------------ #
     # 6. Navigation loop
@@ -135,6 +157,8 @@ def main():
     blocked_headings: set = set()                         # headings (rad) where FORWARD hit a wall
     steps_no_progress   = 0                               # steps without meaningful goal-distance reduction
     prev_goal_dist      = float("inf")
+    consecutive_non_fwd = 0                               # consecutive non-FORWARD actions
+    wall_avoid_queue: List[int] = []                      # forced action queue for wall detour
     recent_poses: List[torch.Tensor] = [pose_v6.to(device)]
     reached       = False
     step_times_ms: List[float] = []
@@ -158,10 +182,25 @@ def main():
 
         n_dets    = int(aux["n_matched"].item() + aux["n_new_slots"].item())
         n_slots   = int(belief.slot_conf_logit.gt(cfg.slots.conf_logit_empty_threshold).sum().item())
-        goal_dist = planner.goal_distance(belief)
 
-        # ---- Check goal reached ----
-        if planner.reached_goal(belief):
+        # ---- Waypoint advancement ----
+        # Advance to the next waypoint when the agent is close enough to the
+        # current one. The planner's goal is updated to the new waypoint.
+        # The LAST waypoint is the actual goal — reaching it counts as success.
+        curr_xy = belief.pose_mu[:2]
+        wp_dist = float((curr_xy - current_wp.to(device)).norm())
+        if wp_dist < wp_advance and wp_idx < len(waypoints_v6) - 1:
+            wp_idx    += 1
+            current_wp = waypoints_v6[wp_idx]
+            planner.set_goal(current_wp.to(device))
+            blocked_headings.clear()   # wall memory from previous segment is stale
+            print(f"  >> Waypoint reached → now targeting wp[{wp_idx}]/"
+                  f"{len(waypoints_v6)-1}: ({current_wp[0]:.2f}, {current_wp[1]:.2f})")
+
+        goal_dist = planner.goal_distance(belief)   # distance to current waypoint / final goal
+
+        # ---- Check final goal reached ----
+        if wp_idx == len(waypoints_v6) - 1 and planner.reached_goal(belief):
             print(f"\n  >> Goal reached at step {step + 1}!")
             reached = True
             break
@@ -171,6 +210,40 @@ def main():
             plan = planner.select_action(belief, recent_poses,
                                          blocked_headings=blocked_headings)
         action = plan["best_action"]
+
+        # ---- Forced wall-avoidance queue (highest priority) ----
+        # Populated by the escape logic below; each element is an action int.
+        if wall_avoid_queue:
+            action = wall_avoid_queue.pop(0)
+            print(f"       [wall-avoid: {ACTION_NAMES[action]}, "
+                  f"{len(wall_avoid_queue)} left]")
+
+        # ---- Spin-oscillation override (only when queue is empty) ----
+        elif consecutive_non_fwd >= 6 and goal_dist < 3.0 and planner.goal_pos is not None:
+            dx_g     = float(planner.goal_pos[0] - belief.pose_mu[0])
+            dy_g     = float(planner.goal_pos[1] - belief.pose_mu[1])
+            goal_dir = math.atan2(dy_g, dx_g)
+            curr_h   = float(belief.pose_mu[2])
+            herr     = math.atan2(math.sin(goal_dir - curr_h),
+                                   math.cos(goal_dir - curr_h))
+            if abs(herr) < math.radians(45):
+                ov_action = 0
+            elif herr > 0:
+                ov_action = 1
+            else:
+                ov_action = 2
+            # Only apply override if FORWARD at this heading is not already blocked.
+            _blocked_fwd = False
+            if ov_action == 0 and blocked_headings:
+                _ts = cfg.pose.turn_step_rad
+                _rh = math.atan2(math.sin(round(curr_h / _ts) * _ts),
+                                  math.cos(round(curr_h / _ts) * _ts))
+                _blocked_fwd = _rh in blocked_headings
+            if not _blocked_fwd:
+                action = ov_action
+                consecutive_non_fwd = 0
+                print(f"       [spin-override: goal_dir={math.degrees(goal_dir):.0f}°, "
+                      f"h_err={math.degrees(herr):.0f}°, -> {ACTION_NAMES[action]}]")
 
         # ---- Log ----
         x, y, th = belief.pose_mu.tolist()
@@ -212,12 +285,42 @@ def main():
 
         prev_goal_dist = goal_dist
 
-        # Escape: if no meaningful progress in 8 steps, clear wall memory.
+        # Escape: no meaningful progress in 8 steps.
+        # Build a forced action queue: turn to the perpendicular direction
+        # (computed turns) + 3 FORWARD steps to physically clear the wall.
         if steps_no_progress >= 8:
+            if blocked_headings and planner.goal_pos is not None and not wall_avoid_queue:
+                dx_g      = float(planner.goal_pos[0] - belief.pose_mu[0])
+                dy_g      = float(planner.goal_pos[1] - belief.pose_mu[1])
+                _goal_dir = math.atan2(dy_g, dx_g)
+                _curr_h   = float(belief.pose_mu[2])
+                _ts       = cfg.pose.turn_step_rad
+                # Pick whichever perpendicular (±90°) requires fewer turns
+                _perp1    = _goal_dir + math.pi / 2
+                _perp2    = _goal_dir - math.pi / 2
+                _herr1    = math.atan2(math.sin(_perp1 - _curr_h),
+                                        math.cos(_perp1 - _curr_h))
+                _herr2    = math.atan2(math.sin(_perp2 - _curr_h),
+                                        math.cos(_perp2 - _curr_h))
+                if abs(_herr1) <= abs(_herr2):
+                    _herr_p, _perp_dir = _herr1, _perp1
+                else:
+                    _herr_p, _perp_dir = _herr2, _perp2
+                _n_turns  = max(1, round(abs(_herr_p) / _ts))
+                _turn_dir = 1 if _herr_p > 0 else 2
+                wall_avoid_queue = [_turn_dir] * _n_turns + [0, 0, 0]
+                print(f"       [wall-escape: {_n_turns} turns to "
+                      f"{math.degrees(_perp_dir):.0f}° + 3 FWD queued]")
             if blocked_headings:
                 print(f"       [escape: clearing {len(blocked_headings)} blocked headings]")
             blocked_headings.clear()
             steps_no_progress = 0
+
+        # Update spin counter: reset on any FORWARD, increment on turns.
+        if action == 0:
+            consecutive_non_fwd = 0
+        else:
+            consecutive_non_fwd += 1
 
         # Store odom and action for next iteration's forward_step call.
         # Do NOT call pose_est.predict here — that would double-apply the turn.

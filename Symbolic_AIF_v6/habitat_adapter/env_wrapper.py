@@ -297,6 +297,69 @@ class HabitatEnv:
         self._goal_hab3d = np.array(cand, dtype=np.float32)
         return _to_v6(cand)
 
+    def get_path_waypoints(
+        self,
+        goal_v6: torch.Tensor,
+        waypoint_spacing: float = 1.0,
+    ) -> Optional[List[torch.Tensor]]:
+        """
+        Use the Habitat pathfinder to find the navigable path from the current
+        agent position to goal_v6, and return it as a list of V6 [x, y] tensors.
+
+        Waypoints are spaced ~waypoint_spacing metres apart along the path.
+        Returns None if no path exists (different navmesh components).
+        The first element is always close to the current position; the last is
+        the goal.
+        """
+        try:
+            from habitat_sim.nav import ShortestPath
+        except ImportError:
+            return None
+
+        start = np.array(self.agent.get_state().position)
+        # snap_point() returns a Magnum Vector3, not a numpy array.
+        # Convert element-by-element to avoid the ".tolist()" swizzle error.
+        _snapped = self.sim.pathfinder.snap_point(start)
+        try:
+            start_snapped = [float(_snapped[0]), float(_snapped[1]), float(_snapped[2])]
+            if any(math.isnan(v) for v in start_snapped):
+                start_snapped = start.tolist()
+        except Exception:
+            start_snapped = start.tolist()
+
+        goal_hab = (
+            self._goal_hab3d
+            if self._goal_hab3d is not None
+            else np.array([-goal_v6[1].item(), start[1], -goal_v6[0].item()])
+        )
+
+        path = ShortestPath()
+        path.requested_start = start_snapped
+        path.requested_end   = [float(goal_hab[0]), float(goal_hab[1]), float(goal_hab[2])]
+        if not self.sim.pathfinder.find_path(path):
+            return None
+
+        pts = path.points          # list of mn.Vector3 along the path
+        if len(pts) < 2:
+            return None
+
+        # Subsample: keep a point every ~waypoint_spacing metres + always keep last
+        waypoints: List[torch.Tensor] = []
+        prev  = np.array([float(pts[0][0]), float(pts[0][2])])  # (X_hab, Z_hab)
+        accum = 0.0
+        for i, pt in enumerate(pts):
+            curr = np.array([float(pt[0]), float(pt[2])])
+            accum += float(np.linalg.norm(curr - prev))
+            prev  = curr
+            if accum >= waypoint_spacing or i == len(pts) - 1:
+                waypoints.append(torch.tensor(
+                    [-float(pt[2]), -float(pt[0])],  # V6: x=-Z_hab, y=-X_hab
+                    dtype=torch.float32,
+                ))
+                accum = 0.0
+
+        return waypoints if waypoints else None
+
     def goal_dist_habitat(self, goal_v6: torch.Tensor) -> float:
         """
         Geodesic distance from current agent to goal.
@@ -320,6 +383,100 @@ class HabitatEnv:
             return float(self.sim.pathfinder.geodesic_distance(current_snapped, goal_hab))
         except Exception:
             return float("inf")
+
+    # ------------------------------------------------------------------ #
+    # LiDAR simulation from depth
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def depth_to_lidar(
+        depth: torch.Tensor,
+        n_beams: int  = 64,
+        hfov_deg: float = 90.0,
+        band_frac: float = 0.08,   # fraction of image height used for horizontal band
+        clip_max: float  = 8.0,    # metres — clip noisy far readings
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Simulate a 1-D horizontal LiDAR scan from a depth image.
+
+        The camera's horizontal FOV covers the robot's forward 90°.
+        Left pixel  → angle = +hfov/2 (V6 left = positive y)
+        Right pixel → angle = -hfov/2 (V6 right = negative y)
+        Center pixel → angle = 0 (straight ahead)
+
+        Returns
+        -------
+        angles_rad : [n_beams]  beam angles in V6 frame radians
+        dists_m    : [n_beams]  distances in metres
+        """
+        d = depth.squeeze().float()                          # [H, W]
+        H, W = d.shape
+
+        # Average a horizontal band in the middle of the image
+        bw   = max(1, int(H * band_frac))
+        cy   = H // 2
+        band = d[max(0, cy - bw // 2): cy + bw // 2 + 1].mean(0)   # [W]
+
+        # Clamp to valid depth range
+        band = band.clamp(0.0, clip_max)
+
+        # Resample to n_beams evenly
+        idx        = torch.linspace(0, W - 1, n_beams).long()
+        dists_m    = band[idx]                                        # [n_beams]
+
+        # Beam angles: left → +hfov/2, right → -hfov/2
+        # (image col 0 = left of image = V6 left = positive y angle)
+        half_fov   = math.radians(hfov_deg / 2.0)
+        angles_rad = torch.linspace(half_fov, -half_fov, n_beams)    # [n_beams]
+
+        return angles_rad, dists_m
+
+    @staticmethod
+    def lidar_min_forward(
+        angles_rad: torch.Tensor,
+        dists_m:    torch.Tensor,
+        cone_deg:   float = 20.0,
+    ) -> float:
+        """Minimum distance to obstacle in the forward cone (±cone_deg)."""
+        cone = math.radians(cone_deg)
+        fwd  = dists_m[torch.abs(angles_rad) <= cone]
+        return float(fwd.min()) if fwd.numel() > 0 else float("inf")
+
+    @staticmethod
+    def lidar_side_clearance(
+        angles_rad: torch.Tensor,
+        dists_m:    torch.Tensor,
+    ) -> Tuple[float, float]:
+        """Mean clearance on left (+) and right (-) halves."""
+        left  = dists_m[angles_rad > 0].mean()
+        right = dists_m[angles_rad < 0].mean()
+        return float(left), float(right)
+
+    def get_occupancy_gt(self, resolution: float = 0.1, size: int = 64) -> np.ndarray:
+        """
+        Build a square binary occupancy grid centred on the current agent.
+
+        grid[r, c] = 1  →  cell is occupied (not navigable)
+        grid[r, c] = 0  →  cell is free (navigable)
+
+        resolution : metres per cell
+        size       : grid side length in cells  (size×size)
+        """
+        pf  = self.sim.pathfinder
+        pos = np.array(self.agent.get_state().position)   # Habitat XYZ
+        half = (size // 2) * resolution
+        grid = np.zeros((size, size), dtype=np.float32)
+        for ri in range(size):
+            z_off = (ri - size // 2) * resolution        # forward axis (V6 x → Hab -Z)
+            for ci in range(size):
+                x_off = (ci - size // 2) * resolution    # left axis   (V6 y → Hab -X)
+                pt = np.array([
+                    pos[0] - x_off,      # Hab X = -y_v6
+                    pos[1],              # keep floor height
+                    pos[2] - z_off,      # Hab Z = -x_v6
+                ], dtype=np.float32)
+                grid[ri, ci] = 0.0 if pf.is_navigable(pt) else 1.0
+        return grid                                         # [size, size]
 
     # ------------------------------------------------------------------ #
     # Observation processing

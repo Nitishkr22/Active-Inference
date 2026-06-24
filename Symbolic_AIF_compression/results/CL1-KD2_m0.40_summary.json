@@ -1,0 +1,25 @@
+{
+  "config": {
+    "checkpoint": "./checkpoints/CL1-KD2/best_model.pt",
+    "gru_hidden_dim": 128,
+    "encoder_feat_dim": 64,
+    "context_dim": 16,
+    "use_depthwise": false,
+    "total_params": 781111,
+    "inference_params": 427598,
+    "inference_size_mb": 1.6312,
+    "noise_sigma": 0.0,
+    "mask_fraction": 0.4
+  },
+  "num_trials": 25,
+  "success_rate": 0.84,
+  "collision_rate": 0.0,
+  "avg_steps_successful": 15.380952380952381,
+  "avg_steps_all": 25.72,
+  "mean_path_efficiency": 0.6449456100140917,
+  "mean_belief_error_rate": 0.06632168092522785,
+  "mean_entropy": 0.3326918835260896,
+  "mean_context_std": 0.1369732862027456,
+  "mean_ms_per_step": 1.8744440673959997,
+  "total_wall_clock_s": 8.82
+}

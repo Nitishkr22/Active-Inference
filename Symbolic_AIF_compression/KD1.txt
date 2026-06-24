@@ -1,0 +1,191 @@
+ ▐▛███▜▌   Claude Code v2.1.186
+▝▜█████▛▘  Sonnet 4.6 · Claude Pro
+  ▘▘ ▝▝    ~/Documents/AIF_code/Active-Inference/Symbolic_AIF_compression
+
+
+● Here's the complete Pareto picture now with both checkpoint types:
+
+  Navigation Success Rate Summary (100 trials each):
+
+  ┌───────────┬─────────┬───────────┬──────────┬───────────┬─────┬────────┐
+  │   Model   │ InfPara │ Compressi │ best_mod │ best_beli │ Bes │ ms/ste │
+  │           │   ms    │    on     │    el    │    ef     │  t  │   p    │
+  ├───────────┼─────────┼───────────┼──────────┼───────────┼─────┼────────┤
+  │ V5f (ref) │ 1,685,5 │ 1×        │ —        │ —         │ 96% │ 2.0    │
+  │           │ 50      │           │          │           │     │        │
+  ├───────────┼─────────┼───────────┼──────────┼───────────┼─────┼────────┤
+  │ CL0 (retr │ 1,685,5 │ 1×        │ 80%      │ 88%       │ 88% │ 1.9    │
+  │ ained)    │ 50      │           │          │           │     │        │
+  ├───────────┼─────────┼───────────┼──────────┼───────────┼─────┼────────┤
+  │ CL1       │ 427,598 │ 3.9×      │ 83%      │ 72%       │ 83% │ 1.8    │
+  ├───────────┼─────────┼───────────┼──────────┼───────────┼─────┼────────┤
+  │ CL2       │ 111,350 │ 15.1×     │ 47%      │ 47%       │ 47% │ 1.7    │
+  ├───────────┼─────────┼───────────┼──────────┼───────────┼─────┼────────┤
+  │ CL3       │ 110,046 │ 15.3×     │ 32%      │ 32%       │ 32% │ 1.8    │
+  ├───────────┼─────────┼───────────┼──────────┼───────────┼─────┼────────┤
+  │ CL4       │ 29,458  │ 57.2×     │ 7%       │ 20%       │ 20% │ 1.7    │
+  ├───────────┼─────────┼───────────┼──────────┼───────────┼─────┼────────┤
+  │ CL5       │ 9,328   │ 180.7×    │ 3%       │ —         │ 3%  │ 1.8    │
+  └───────────┴─────────┴───────────┴──────────┴───────────┴─────┴────────┘
+
+  Key findings:
+
+  1. The Pareto cliff is between CL1 and CL2 (83% → 47%), not between CL3/CL4 as
+  the training metrics suggested. Halving the GRU from 256→128 is survivable;
+  halving again to 64 is not.
+  2. CL1 (3.9×) is the viable compression point but still 13% below V5f (96%),
+  partly from training variance (CL0 retrained gets 88% — the architecture alone
+  explains an 8% floor gap).
+  3. The collision problem: CL1 shows 8-12% collision rate — the compressed
+  model's collision head underestimates obstacle risk, causing the EFE planner
+  to take riskier paths.
+  4. ms/step is flat (~1.8ms) across all levels — the GRU dominates inference
+  time and all variants fall in the same range.
+
+  The gap between V5f (96%) and CL1 (83%) is likely recoverable via knowledge 
+  distillation — that's the natural next experiment. Training from scratch loses
+  information that V5f has about navigating this environment; distilling from
+  V5f as teacher would transfer that knowledge to the smaller CL1/CL2
+  architectures.
+
+  Proposed next steps for ICRA:
+  1. Train CL1-KD (knowledge distillation from V5f → CL1 architecture) — expect
+  90-95% success
+  2. Train CL2-KD — if KD bridges the gap, CL2 might reach 70-80%, making 15×
+  compression practical
+  3. Run the quantization study (FP16/INT8) on the best CL1 model
+  4. Run noise sweep on V5f, CL1, CL1-KD to show robustness vs compression
+  tradeoff
+
+  The ICRA contribution becomes much stronger: "Without distillation: 3.9× 
+  compression costs 13% accuracy. With knowledge distillation: 15× compression 
+  costs <10% accuracy." That's a publishable result.
+
+  Want to implement the knowledge distillation training next?
+
+✻ Baked for 53s
+
+❯ /compact                                                                      
+  ⎿  Compacted (ctrl+o to see full summary)
+  ⎿  Read ../../.claude/projects/-home-nitish-Documents-AIF-code/memory/project_
+     aif_results.md (121 lines)
+  ⎿  Referenced file 
+     Active-Inference/Symbolic_AIF_compression/evaluate_compressed.py
+
+❯ /insights                                                                     
+
+● Your shareable insights report is ready:
+  file:///home/nitish/.claude/usage-data/report-2026-06-23-105758.html
+
+  Want to dig into any section or try one of the suggestions?
+
+✻ Brewed for 3s
+
+※ recap: We're building a compressed AIF navigation model for ICRA, benchmarking belief dimensionality vs success rate. The Pareto cliff is CL1→CL2 (83%→47%); next step is running knowledge distillation training on CL1 to close the gap with V5f's 96%. (disable recaps in /config)
+
+❯ /export compression.md                                                        
+  ⎿  Conversation exported to: /home/nitish/Documents/AIF_code/compression.md
+
+❯ /mcp                                                                          
+  ⎿  No MCP servers configured. Please run /doctor if this is unexpected.
+     Otherwise, run claude mcp --help or visit
+     https://code.claude.com/docs/en/mcp to learn more.
+
+❯ /model 
+  ⎿  Kept model as Sonnet 4.6
+
+❯ yes lets go ahead and implement knowledge knowledge distillation. do the      
+  necessary changes and also keep the previous results for comparison at the    
+  end. start building up and let me know when to run the training code I will   
+  run it locally.                                                               
+
+● Let me read the key files to understand the current training setup before
+  designing the KD implementation.
+
+  Read 1 file, listed 2 directories (ctrl+o to expand)
+
+● Now let me check the V5 model to understand the teacher's interface and the
+  compression configs:
+
+  Read 3 files (ctrl+o to expand)
+
+● Let me check the V5f checkpoint structure and read the model_v5.py
+  forward_filter interface:
+
+  Read 1 file, listed 1 directory (ctrl+o to expand)
+
+● Let me check what forward_filter returns in V5 and verify the row_probs_seq
+  key exists:
+
+  Read 1 file (ctrl+o to expand)
+
+● Good — row_probs_seq, col_probs_seq, heading_probs_seq confirmed in teacher
+  output. Now let me verify the student's forward_filter return dict has the
+  same keys:
+
+  Read 1 file (ctrl+o to expand)
+● Both models return identical keys. I have everything I need. Now let me write
+  train_kd.py:
+
+● Write(train_kd.py)
+  ⎿  Wrote 577 lines to train_kd.py
+      1 """
+        essed.
+      3 
+      4 Teacher: V5f (frozen, 1.68M params, 96% navigation success).
+        sion_configs.py).
+      6 
+        compressed.py:
+      8   kd_belief_loss  : KL(student || teacher) for row/col/heading be
+        lief distributions
+        ext))  [off by default]
+     … +658 lines (ctrl+o to expand)
+
+● Now let me do a quick sanity check — make sure the imports resolve and the
+  script has no syntax errors:
+
+  Ran 4 shell commands (ctrl+o to expand)
+
+● All tests pass. Let me do one final end-to-end test of compute_batch_losses_kd
+  with a fake mini-batch:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● End-to-end test passes. The high initial KD loss (222.8) on random weights is
+  expected — the kd warmup of 5 epochs lets hard losses establish basic
+  localization first, then KD signal ramps in as the student learns. Once
+  distributions start matching the teacher, the KD term drops rapidly.
+
+  Here's what was built:
+
+  train_kd.py — complete, standalone KD training script that:
+  - Loads V5f as a frozen teacher (96% nav, 1.68M params)
+  - Runs teacher's forward_filter in no_grad on each batch
+  - Adds kd_belief_loss = T² × KL(student || teacher_soft) for row/col/heading
+  distributions
+  - Temperature T=2 (default) softens teacher's peaked beliefs for richer
+  gradient signal
+  - KD warmup: weight ramps 0→1 over 5 epochs so hard labels establish
+  localization first
+  - Optional kd_context_loss (off by default, enable with --w_kd_context 0.1)
+  - Saves checkpoints in same format as train_compressed.py →
+  evaluate_compressed.py works unchanged
+
+  ---
+  Run these two training jobs (each ~45–55 min):
+
+  cd /home/nitish/Documents/AIF_code/Active-Inference/Symbolic_AIF_compression
+
+  # Primary: CL1-KD (3.9× compression, hoping 90-95%)
+  python train_kd.py --config CL1 \
+      --teacher_ckpt ../Symbolic_AIF_v5/checkpoints_v5f/best_model_v5.pt
+
+  # Secondary: CL2-KD (15× compression, hoping 65-75%)
+  python train_kd.py --config CL2 \
+      --teacher_ckpt ../Symbolic_AIF_v5/checkpoints_v5f/best_model_v5.pt
+
+  Both run sequentially with seed=42 and save to ./checkpoints/CL1-KD/ and
+  ./checkpoints/CL2-KD/. After training finishes, I'll run the navigation evals
+  on both to build the KD vs baseline comparison table for the ICRA paper.
+
+✻ Crunched for 6m 58s

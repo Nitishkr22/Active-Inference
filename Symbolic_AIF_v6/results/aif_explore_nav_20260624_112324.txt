@@ -1,0 +1,277 @@
+Video → /home/nitish/Documents/AIF_code/Active-Inference/Symbolic_AIF_v6/habitat_adapter/../results/aif_explore_nav_20260624_112324.mp4
+Log   → /home/nitish/Documents/AIF_code/Active-Inference/Symbolic_AIF_v6/habitat_adapter/../results/aif_explore_nav_20260624_112324.txt
+
+Device : cuda
+WorldModelV6 : 248,064 params
+Navmesh      : (214, 158)
+
+Start pose (V6) : (-2.42, -5.20, 0.0°)
+
+Wall-follow explorer ready  (SEEK E → N → W → S)
+
+[Memory] Checking for persistent belief...
+[Memory] Restored 64 occupied slots + 274 prior explored poses  (scene matches)
+
+Step |    Phase |  Action |               Pose (x, y, θ) | GoalDist | Slots |    ms
+-------------------------------------------------------------------------------------
+       [WF-SEEK(E) → FORWARD]
+   1 |  EXPLORE | FORWARD | ( -2.42,  -5.20,   0.0°) |      nan |    64 |   527
+       [WF-SEEK(E) → FORWARD]
+   2 |  EXPLORE | FORWARD | ( -2.19,  -5.20,   0.0°) |      nan |    64 |    60
+       [collision]
+       [WF-FOLLOW(E) → TURN_L]
+   3 |  EXPLORE |  TURN_L | ( -2.19,  -5.21,   0.0°) |      nan |    64 |    63
+       [WF-FOLLOW(E) → TURN_L]
+   4 |  EXPLORE |  TURN_L | ( -2.19,  -5.20,  30.0°) |      nan |    64 |    63
+       [WF-FOLLOW(E) → TURN_L]
+   5 |  EXPLORE |  TURN_L | ( -2.19,  -5.17,  60.0°) |      nan |    64 |    82
+       [WF-FOLLOW(E) → FORWARD]
+   6 |  EXPLORE | FORWARD | ( -2.19,  -5.17,  90.0°) |      nan |    64 |    80
+       [WF-FOLLOW(E) → FORWARD]
+   7 |  EXPLORE | FORWARD | ( -2.20,  -4.91,  90.0°) |      nan |    64 |    82
+       [WF-FOLLOW(E) → FORWARD]
+   8 |  EXPLORE | FORWARD | ( -2.19,  -4.69,  90.0°) |      nan |    64 |    84
+       [WF-FOLLOW(E) → TURN_R]
+   9 |  EXPLORE |  TURN_R | ( -2.18,  -4.47,  90.0°) |      nan |    64 |    83
+       [WF-FOLLOW(E) → FORWARD]
+  10 |  EXPLORE | FORWARD | ( -2.18,  -4.47,  60.0°) |      nan |    64 |    74
+       [WF-FOLLOW(E) → FORWARD]
+  11 |  EXPLORE | FORWARD | ( -2.18,  -4.25,  60.0°) |      nan |    64 |    74
+       [WF-FOLLOW(E) → FORWARD]
+  12 |  EXPLORE | FORWARD | ( -2.18,  -4.10,  60.0°) |      nan |    64 |    66
+       [WF-FOLLOW(E) → FORWARD]
+  13 |  EXPLORE | FORWARD | ( -2.22,  -4.05,  60.0°) |      nan |    64 |    69
+       [WF-FOLLOW(E) → TURN_R]
+  14 |  EXPLORE |  TURN_R | ( -2.27,  -4.01,  60.0°) |      nan |    64 |    72
+       [WF-FOLLOW(E) → FORWARD]
+  15 |  EXPLORE | FORWARD | ( -2.27,  -4.01,  30.0°) |      nan |    64 |    58
+       [WF-FOLLOW(E) → FORWARD]
+  16 |  EXPLORE | FORWARD | ( -2.22,  -4.05,  30.0°) |      nan |    64 |    58
+       [WF-FOLLOW(E) → FORWARD]
+  17 |  EXPLORE | FORWARD | ( -2.18,  -4.10,  30.0°) |      nan |    64 |    59
+       [collision]
+       [WF-FOLLOW(E) → TURN_L]
+  18 |  EXPLORE |  TURN_L | ( -2.18,  -4.10,  30.0°) |      nan |    64 |    64
+       [WF-FOLLOW(E) → FORWARD]
+  19 |  EXPLORE | FORWARD | ( -2.18,  -4.10,  60.0°) |      nan |    64 |    66
+       [WF-FOLLOW(E) → FORWARD]
+  20 |  EXPLORE | FORWARD | ( -2.22,  -4.05,  60.0°) |      nan |    64 |    69
+       [WF-FOLLOW(E) → FORWARD]
+  21 |  EXPLORE | FORWARD | ( -2.27,  -4.00,  60.0°) |      nan |    64 |    72
+       [WF-FOLLOW(E) → TURN_R]
+  22 |  EXPLORE |  TURN_R | ( -2.32,  -3.95,  60.0°) |      nan |    64 |    75
+       [WF-FOLLOW(E) → FORWARD]
+  23 |  EXPLORE | FORWARD | ( -2.31,  -3.96,  30.0°) |      nan |    64 |    62
+       [WF-FOLLOW(E) → FORWARD]
+  24 |  EXPLORE | FORWARD | ( -2.27,  -4.01,  30.0°) |      nan |    64 |    58
+       [WF-FOLLOW(E) → FORWARD]
+  25 |  EXPLORE | FORWARD | ( -2.22,  -4.06,  30.0°) |      nan |    64 |    59
+       [WF-FOLLOW(E) → FORWARD]
+  26 |  EXPLORE | FORWARD | ( -2.18,  -4.10,  30.0°) |      nan |    64 |    58
+       [collision]
+       [WF-FOLLOW(E) → TURN_L]
+  27 |  EXPLORE |  TURN_L | ( -2.18,  -4.10,  30.0°) |      nan |    64 |    64
+       [WF-FOLLOW(E) → FORWARD]
+  28 |  EXPLORE | FORWARD | ( -2.18,  -4.10,  60.0°) |      nan |    64 |    66
+       [WF-FOLLOW(E) → FORWARD]
+  29 |  EXPLORE | FORWARD | ( -2.22,  -4.06,  60.0°) |      nan |    64 |    68
+       [WF-FOLLOW(E) → FORWARD]
+  30 |  EXPLORE | FORWARD | ( -2.27,  -4.01,  60.0°) |      nan |    64 |    73
+       [WF-FOLLOW(E) → TURN_R]
+  31 |  EXPLORE |  TURN_R | ( -2.32,  -3.95,  60.0°) |      nan |    64 |    74
+       [WF-FOLLOW(E) → FORWARD]
+  32 |  EXPLORE | FORWARD | ( -2.31,  -3.97,  30.0°) |      nan |    64 |    62
+       [WF-FOLLOW(E) → FORWARD]
+  33 |  EXPLORE | FORWARD | ( -2.27,  -4.01,  30.0°) |      nan |    64 |    59
+       [WF-FOLLOW(E) → FORWARD]
+  34 |  EXPLORE | FORWARD | ( -2.22,  -4.06,  30.0°) |      nan |    64 |    58
+       [WF-ALIGN(N) → TURN_L]
+  35 |  EXPLORE |  TURN_L | ( -2.18,  -4.10,  30.0°) |      nan |    64 |    59
+       [WF-ALIGN(N) → TURN_L]
+  36 |  EXPLORE |  TURN_L | ( -2.18,  -4.10,  60.0°) |      nan |    64 |    66
+       [WF-SEEK(N) → FORWARD]
+  37 |  EXPLORE | FORWARD | ( -2.16,  -4.13,  90.0°) |      nan |    64 |    77
+       [WF-SEEK(N) → FORWARD]
+  38 |  EXPLORE | FORWARD | ( -2.28,  -4.01,  90.0°) |      nan |    64 |    82
+       [WF-SEEK(N) → FORWARD]
+  39 |  EXPLORE | FORWARD | ( -2.32,  -3.74,  90.0°) |      nan |    64 |    83
+       [WF-SEEK(N) → FORWARD]
+  40 |  EXPLORE | FORWARD | ( -2.34,  -3.55,  90.0°) |      nan |    64 |    82
+       [WF-SEEK(N) → FORWARD]
+  41 |  EXPLORE | FORWARD | ( -2.36,  -3.23,  90.0°) |      nan |    64 |    83
+       [WF-SEEK(N) → FORWARD]
+  42 |  EXPLORE | FORWARD | ( -2.37,  -2.98,  90.0°) |      nan |    64 |    91
+       [WF-SEEK(N) → FORWARD]
+  43 |  EXPLORE | FORWARD | ( -2.37,  -2.73,  90.0°) |      nan |    64 |    89
+       [WF-SEEK(N) → FORWARD]
+  44 |  EXPLORE | FORWARD | ( -2.37,  -2.48,  90.0°) |      nan |    64 |    87
+       [WF-ALIGN(W) → TURN_L]
+  45 |  EXPLORE |  TURN_L | ( -2.37,  -2.25,  90.0°) |      nan |    64 |    87
+       [WF-ALIGN(W) → TURN_L]
+  46 |  EXPLORE |  TURN_L | ( -2.37,  -2.25, 120.0°) |      nan |    64 |    90
+       [WF-ALIGN(W) → TURN_L]
+  47 |  EXPLORE |  TURN_L | ( -2.38,  -2.25, 150.0°) |      nan |    64 |    89
+       [WF-SEEK(W) → FORWARD]
+  48 |  EXPLORE | FORWARD | ( -2.37,  -2.24, 180.0°) |      nan |    64 |    94
+       [WF-SEEK(W) → FORWARD]
+  49 |  EXPLORE | FORWARD | ( -2.60,  -2.24, 180.0°) |      nan |    64 |    87
+       [WF-SEEK(W) → FORWARD]
+  50 |  EXPLORE | FORWARD | ( -2.80,  -2.25, 180.0°) |      nan |    64 |    87
+       [WF-SEEK(W) → FORWARD]
+  51 |  EXPLORE | FORWARD | ( -3.02,  -2.25, 180.0°) |      nan |    64 |    86
+       [WF-SEEK(W) → FORWARD]
+  52 |  EXPLORE | FORWARD | ( -3.26,  -2.25, 180.0°) |      nan |    64 |    87
+       [WF-SEEK(W) → FORWARD]
+  53 |  EXPLORE | FORWARD | ( -3.50,  -2.25, 180.0°) |      nan |    64 |    86
+       [WF-SEEK(W) → FORWARD]
+  54 |  EXPLORE | FORWARD | ( -3.65,  -2.26, 180.0°) |      nan |    64 |    89
+       [WF-SEEK(W) → FORWARD]
+  55 |  EXPLORE | FORWARD | ( -3.93,  -2.26, 180.0°) |      nan |    64 |    88
+       [WF-ALIGN(S) → TURN_L]
+  56 |  EXPLORE |  TURN_L | ( -4.23,  -2.27, 180.0°) |      nan |    64 |    87
+       [WF-ALIGN(S) → TURN_L]
+  57 |  EXPLORE |  TURN_L | ( -4.31,  -2.27, -150.0°) |      nan |    64 |    92
+       [WF-ALIGN(S) → TURN_L]
+  58 |  EXPLORE |  TURN_L | ( -4.37,  -2.25, -120.0°) |      nan |    64 |    90
+       [WF-SEEK(S) → FORWARD]
+  59 |  EXPLORE | FORWARD | ( -4.44,  -2.25, -90.0°) |      nan |    64 |    88
+       [WF-SEEK(S) → FORWARD]
+  60 |  EXPLORE | FORWARD | ( -4.51,  -2.50, -90.0°) |      nan |    64 |    89
+       [WF-SEEK(S) → FORWARD]
+  61 |  EXPLORE | FORWARD | ( -4.51,  -2.75, -90.0°) |      nan |    64 |    58
+       [WF-SEEK(S) → FORWARD]
+  62 |  EXPLORE | FORWARD | ( -4.51,  -2.84, -90.0°) |      nan |    64 |    58
+       [collision]
+       [WF-FOLLOW(S) → TURN_L]
+  63 |  EXPLORE |  TURN_L | ( -4.52,  -2.84, -90.0°) |      nan |    64 |    62
+       [WF-FOLLOW(S) → TURN_L]
+  64 |  EXPLORE |  TURN_L | ( -4.56,  -2.82, -60.0°) |      nan |    64 |    68
+       [WF-FOLLOW(S) → TURN_L]
+  65 |  EXPLORE |  TURN_L | ( -4.56,  -2.83, -30.0°) |      nan |    64 |    77
+       [WF-FOLLOW(S) → FORWARD]
+  66 |  EXPLORE | FORWARD | ( -4.56,  -2.78,  -0.0°) |      nan |    64 |    85
+       [WF-FOLLOW(S) → FORWARD]
+  67 |  EXPLORE | FORWARD | ( -4.31,  -2.74,  -0.0°) |      nan |    64 |    85
+       [WF-FOLLOW(S) → FORWARD]
+  68 |  EXPLORE | FORWARD | ( -4.06,  -2.72,  -0.0°) |      nan |    64 |    87
+       [WF-FOLLOW(S) → TURN_R]
+  69 |  EXPLORE |  TURN_R | ( -3.81,  -2.73,  -0.0°) |      nan |    64 |    90
+       [WF-FOLLOW(S) → FORWARD]
+  70 |  EXPLORE | FORWARD | ( -3.81,  -2.73, -30.0°) |      nan |    64 |    91
+       [WF-FOLLOW(S) → FORWARD]
+  71 |  EXPLORE | FORWARD | ( -3.59,  -2.86, -30.0°) |      nan |    64 |    81
+       [WF-FOLLOW(S) → FORWARD]
+  72 |  EXPLORE | FORWARD | ( -3.51,  -2.86, -30.0°) |      nan |    64 |    73
+       [WF-FOLLOW(S) → FORWARD]
+  73 |  EXPLORE | FORWARD | ( -3.46,  -2.81, -30.0°) |      nan |    64 |    69
+       [WF-FOLLOW(S) → TURN_R]
+  74 |  EXPLORE |  TURN_R | ( -3.42,  -2.77, -30.0°) |      nan |    64 |    76
+       [WF-FOLLOW(S) → FORWARD]
+  75 |  EXPLORE | FORWARD | ( -3.43,  -2.77, -60.0°) |      nan |    64 |    73
+       [WF-FOLLOW(S) → FORWARD]
+  76 |  EXPLORE | FORWARD | ( -3.48,  -2.82, -60.0°) |      nan |    64 |    68
+       [WF-FOLLOW(S) → FORWARD]
+  77 |  EXPLORE | FORWARD | ( -3.53,  -2.87, -60.0°) |      nan |    64 |    75
+       [WF-FOLLOW(S) → FORWARD]
+  78 |  EXPLORE | FORWARD | ( -3.60,  -2.92, -60.0°) |      nan |    64 |    83
+       [WF-FOLLOW(S) → TURN_R]
+  79 |  EXPLORE |  TURN_R | ( -3.48,  -3.14, -60.0°) |      nan |    64 |    90
+       [WF-FOLLOW(S) → FORWARD]
+  80 |  EXPLORE | FORWARD | ( -3.41,  -3.16, -90.0°) |      nan |    64 |    92
+       [WF-FOLLOW(S) → FORWARD]
+  81 |  EXPLORE | FORWARD | ( -3.42,  -3.41, -90.0°) |      nan |    64 |   242
+       [WF-FOLLOW(S) → FORWARD]
+  82 |  EXPLORE | FORWARD | ( -3.42,  -3.64, -90.0°) |      nan |    64 |    90
+       [WF-FOLLOW(S) → FORWARD]
+  83 |  EXPLORE | FORWARD | ( -3.42,  -3.90, -90.0°) |      nan |    64 |    90
+       [WF-FOLLOW(S) → TURN_R]
+  84 |  EXPLORE |  TURN_R | ( -3.44,  -4.19, -90.0°) |      nan |    64 |    92
+       [WF-FOLLOW(S) → FORWARD]
+  85 |  EXPLORE | FORWARD | ( -3.42,  -4.20, -120.0°) |      nan |    64 |    92
+       [WF-FOLLOW(S) → FORWARD]
+  86 |  EXPLORE | FORWARD | ( -3.55,  -4.43, -120.0°) |      nan |    64 |    92
+       [WF-FOLLOW(S) → FORWARD]
+  87 |  EXPLORE | FORWARD | ( -3.67,  -4.64, -120.0°) |      nan |    64 |    92
+       [WF-FOLLOW(S) → FORWARD]
+  88 |  EXPLORE | FORWARD | ( -3.69,  -4.82, -120.0°) |      nan |    64 |    91
+       [WF-FOLLOW(S) → TURN_R]
+  89 |  EXPLORE |  TURN_R | ( -3.72,  -5.08, -120.0°) |      nan |    64 |    91
+       [WF-FOLLOW(S) → FORWARD]
+  90 |  EXPLORE | FORWARD | ( -3.74,  -4.99, -150.0°) |      nan |    64 |    91
+       [WF-FOLLOW(S) → FORWARD]
+  91 |  EXPLORE | FORWARD | ( -3.80,  -5.11, -150.0°) |      nan |    64 |    91
+       [WF-FOLLOW(S) → FORWARD]
+  92 |  EXPLORE | FORWARD | ( -4.02,  -5.24, -150.0°) |      nan |    64 |    91
+       [WF-FOLLOW(S) → FORWARD]
+  93 |  EXPLORE | FORWARD | ( -4.23,  -5.37, -150.0°) |      nan |    64 |    90
+       [WF-FOLLOW(S) → TURN_R]
+  94 |  EXPLORE |  TURN_R | ( -4.45,  -5.41, -150.0°) |      nan |    64 |    90
+  95 |  EXPLORE |  TURN_R | ( -4.45,  -5.40, 180.0°) |      nan |    64 |    92
+
+============================================================
+  EXPLORATION COMPLETE at step 96  [early (belief saturated)]  (64 active slots in belief map)
+  Switching to NAVIGATION phase...
+  Goal (V6)    : (-6.61, -0.59)
+  Waypoints    : 3
+    wp[0] = (-3.45, -4.84)
+    wp[1] = (-3.50, -2.99)
+    wp[2] = (-6.61, -0.59)
+============================================================
+
+  96 | NAVIGATE |  TURN_R | ( -4.47,  -5.41, 150.0°) |    2.606 |    64 |   123
+  97 | NAVIGATE |  TURN_R | ( -4.46,  -5.42, 120.0°) |    2.611 |    64 |    94
+  98 | NAVIGATE |  TURN_R | ( -4.46,  -5.42,  90.0°) |    2.614 |    64 |    93
+  99 | NAVIGATE | FORWARD | ( -4.46,  -5.52,  60.0°) |    2.700 |    64 |    94
+ 100 | NAVIGATE | FORWARD | ( -4.33,  -5.44,  60.0°) |    2.584 |    64 |    89
+ 101 | NAVIGATE | FORWARD | ( -4.20,  -5.49,  60.0°) |    2.601 |    64 |    89
+ 102 | NAVIGATE | FORWARD | ( -4.07,  -5.30,  60.0°) |    2.384 |    64 |    89
+ 103 | NAVIGATE | FORWARD | ( -3.93,  -5.32,  60.0°) |    2.375 |    64 |    89
+ 104 | NAVIGATE | FORWARD | ( -3.84,  -5.37,  60.0°) |    2.402 |    64 |    91
+ 105 | NAVIGATE | FORWARD | ( -3.69,  -5.16,  60.0°) |    2.182 |    64 |    89
+ 106 | NAVIGATE | FORWARD | ( -3.56,  -4.93,  60.0°) |    1.940 |    64 |    90
+ 107 | NAVIGATE | FORWARD | ( -3.45,  -4.73,  60.0°) |    1.745 |    64 |    89
+ 108 | NAVIGATE | FORWARD | ( -3.33,  -4.54,  60.0°) |    1.557 |    64 |    90
+       [final-approach: h_err=56° → TURN_L]
+ 109 | NAVIGATE |  TURN_L | ( -3.20,  -4.34,  60.0°) |    1.385 |    64 |    88
+       [final-approach: h_err=26° → FORWARD]
+ 110 | NAVIGATE | FORWARD | ( -3.20,  -4.36,  90.0°) |    1.404 |    64 |    90
+       [final-approach: h_err=32° → TURN_L]
+ 111 | NAVIGATE |  TURN_L | ( -3.19,  -4.13,  90.0°) |    1.179 |    64 |    92
+       [final-approach: h_err=2° → FORWARD]
+ 112 | NAVIGATE | FORWARD | ( -3.23,  -4.16, 120.0°) |    1.197 |    64 |    90
+       [final-approach: h_err=2° → FORWARD]
+ 113 | NAVIGATE | FORWARD | ( -3.33,  -3.97, 120.0°) |    0.994 |    64 |    90
+  >> wp[2]/2: (-6.61, -0.59)
+ 114 | NAVIGATE | FORWARD | ( -3.48,  -3.78, 120.0°) |    4.473 |    64 |    94
+ 115 | NAVIGATE | FORWARD | ( -3.59,  -3.57, 120.0°) |    4.244 |    64 |    84
+ 116 | NAVIGATE | FORWARD | ( -3.71,  -3.35, 120.0°) |    4.003 |    64 |    86
+ 117 | NAVIGATE | FORWARD | ( -3.84,  -3.13, 120.0°) |    3.764 |    64 |    90
+ 118 | NAVIGATE | FORWARD | ( -3.97,  -2.92, 120.0°) |    3.526 |    64 |    89
+ 119 | NAVIGATE | FORWARD | ( -4.09,  -2.70, 120.0°) |    3.290 |    64 |    90
+ 120 | NAVIGATE | FORWARD | ( -4.22,  -2.48, 120.0°) |    3.056 |    64 |    85
+ 121 | NAVIGATE | FORWARD | ( -4.34,  -2.27, 120.0°) |    2.825 |    64 |    78
+ 122 | NAVIGATE | FORWARD | ( -4.47,  -2.05, 120.0°) |    2.598 |    64 |    70
+ 123 | NAVIGATE |  TURN_L | ( -4.59,  -1.83, 120.0°) |    2.375 |    64 |    62
+ 124 | NAVIGATE | FORWARD | ( -4.59,  -1.83, 150.0°) |    2.375 |    64 |    73
+ 125 | NAVIGATE | FORWARD | ( -4.81,  -1.71, 150.0°) |    2.125 |    64 |    73
+ 126 | NAVIGATE | FORWARD | ( -5.02,  -1.58, 150.0°) |    1.875 |    64 |    73
+ 127 | NAVIGATE | FORWARD | ( -5.24,  -1.46, 150.0°) |    1.626 |    64 |    70
+       [final-approach: h_err=13° → FORWARD]
+ 128 | NAVIGATE | FORWARD | ( -5.47,  -1.34, 150.0°) |    1.362 |    64 |    68
+       [final-approach: h_err=16° → FORWARD]
+ 129 | NAVIGATE | FORWARD | ( -5.69,  -1.21, 150.0°) |    1.112 |    64 |    63
+       [final-approach: h_err=19° → FORWARD]
+ 130 | NAVIGATE | FORWARD | ( -5.91,  -1.09, 150.0°) |    0.863 |    64 |    59
+       [final-approach: h_err=25° → FORWARD]
+ 131 | NAVIGATE | FORWARD | ( -6.12,  -0.96, 150.0°) |    0.615 |    64 |    57
+
+  >> GOAL REACHED at step 132!
+
+============================================================
+  Result         : SUCCESS
+  Steps          : 132  (160 explore + 0 navigate)
+  Final slot count: 64
+  Final goal dist: 0.368m
+  Mean ms/step   : 84
+============================================================
+  [Memory] Saved 64 occupied slots → belief_memory.pt

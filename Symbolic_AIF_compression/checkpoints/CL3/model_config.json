@@ -1,0 +1,21 @@
+{
+  "obs_channels": 1,
+  "obs_height": 64,
+  "obs_width": 64,
+  "num_actions": 4,
+  "num_row_classes": 9,
+  "num_col_classes": 9,
+  "num_heading_classes": 4,
+  "gru_hidden_dim": 64,
+  "encoder_feat_dim": 32,
+  "context_dim": 8,
+  "use_depthwise": false,
+  "factor_hidden_dim": 32,
+  "transition_hidden_dim": 32,
+  "collision_hidden_dim": 32,
+  "action_emb_dim": 16,
+  "decoder_base_channels": 32,
+  "decoder_hidden_dim": 64,
+  "use_predictive_prior": true,
+  "context_free_bits": 0.05
+}

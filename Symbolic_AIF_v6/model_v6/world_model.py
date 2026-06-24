@@ -36,6 +36,7 @@ from .data_association import associate
 from .perception import Perception
 from .pose_estimator import PoseEstimator
 from .slot_memory import SlotMemory
+from .structural_detector import StructuralDetector
 
 
 # ------------------------------------------------------------------ #
@@ -97,6 +98,7 @@ class WorldModelV6(nn.Module):
         super().__init__()
         self.cfg         = cfg
         self.perception  = Perception(cfg)
+        self.struct_det  = StructuralDetector(cfg)
         self.slot_mem    = SlotMemory(cfg)
         self.pose_est    = PoseEstimator(cfg)
         self.ctx_encoder = ContextEncoder(cfg)
@@ -130,9 +132,12 @@ class WorldModelV6(nn.Module):
         """
         device = prev_belief.device
 
-        # ---- 1. Perception ----
+        # ---- 1. Perception: RGB objects + depth structural elements ----
         detections: List[Detection] = self.perception(rgb, depth, cam_to_world)
         detections = [d.to(device) for d in detections]
+
+        struct_dets = self.struct_det.detect(depth, cam_to_world)
+        detections  = detections + [d.to(device) for d in struct_dets]
 
         # ---- 2. Pose prediction (odometry) ----
         pose_mu_prior, pose_logvar_prior = self.pose_est.predict(

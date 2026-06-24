@@ -1,0 +1,734 @@
+Video → /home/nitish/Documents/AIF_code/Active-Inference/Symbolic_AIF_v6/habitat_adapter/../results/aif_explore_nav_20260624_114353.mp4
+Log   → /home/nitish/Documents/AIF_code/Active-Inference/Symbolic_AIF_v6/habitat_adapter/../results/aif_explore_nav_20260624_114353.txt
+
+Device : cuda
+WorldModelV6 : 248,064 params
+Navmesh      : (214, 158)
+
+Start pose (V6) : (-6.37, -3.69, 0.0°)
+
+Wall-follow explorer ready  (SEEK E → N → W → S)
+
+[Memory] Checking for persistent belief...
+[Memory] Restored 64 occupied slots + 300 prior explored poses  (scene matches)
+
+Step |    Phase |  Action |               Pose (x, y, θ) | GoalDist | Slots |    ms
+-------------------------------------------------------------------------------------
+       [WF-SEEK(E) → FORWARD]
+   1 |  EXPLORE | FORWARD | ( -6.39,  -3.72,   0.0°) |      nan |    64 |   555
+       [WF-SEEK(E) → FORWARD]
+   2 |  EXPLORE | FORWARD | ( -6.06,  -3.74,   0.0°) |      nan |    64 |    90
+       [WF-SEEK(E) → FORWARD]
+   3 |  EXPLORE | FORWARD | ( -5.74,  -3.77,   0.0°) |      nan |    64 |    90
+       [WF-SEEK(E) → FORWARD]
+   4 |  EXPLORE | FORWARD | ( -5.47,  -3.80,   0.0°) |      nan |    64 |    94
+       [WF-SEEK(E) → FORWARD]
+   5 |  EXPLORE | FORWARD | ( -5.18,  -3.82,   0.0°) |      nan |    64 |    93
+       [WF-SEEK(E) → FORWARD]
+   6 |  EXPLORE | FORWARD | ( -4.93,  -3.87,   0.0°) |      nan |    64 |    93
+       [WF-SEEK(E) → FORWARD]
+   7 |  EXPLORE | FORWARD | ( -4.71,  -3.88,   0.0°) |      nan |    64 |    91
+       [WF-SEEK(E) → FORWARD]
+   8 |  EXPLORE | FORWARD | ( -4.47,  -3.84,   0.0°) |      nan |    64 |    90
+       [WF-ALIGN(N) → TURN_L]
+   9 |  EXPLORE |  TURN_L | ( -4.21,  -3.86,   0.0°) |      nan |    64 |    90
+       [WF-ALIGN(N) → TURN_L]
+  10 |  EXPLORE |  TURN_L | ( -4.20,  -3.85,  30.0°) |      nan |    64 |    89
+       [WF-ALIGN(N) → TURN_L]
+  11 |  EXPLORE |  TURN_L | ( -4.22,  -3.85,  60.0°) |      nan |    64 |    87
+       [WF-SEEK(N) → FORWARD]
+  12 |  EXPLORE | FORWARD | ( -4.28,  -3.88,  90.0°) |      nan |    64 |    88
+       [WF-SEEK(N) → FORWARD]
+  13 |  EXPLORE | FORWARD | ( -4.34,  -3.65,  90.0°) |      nan |    64 |    88
+       [WF-SEEK(N) → FORWARD]
+  14 |  EXPLORE | FORWARD | ( -4.34,  -3.40,  90.0°) |      nan |    64 |    59
+       [collision]
+       [WF-FOLLOW(N) → TURN_L]
+  15 |  EXPLORE |  TURN_L | ( -4.33,  -3.38,  90.0°) |      nan |    64 |    62
+       [WF-FOLLOW(N) → TURN_L]
+  16 |  EXPLORE |  TURN_L | ( -4.40,  -3.42, 120.0°) |      nan |    64 |    61
+       [WF-FOLLOW(N) → TURN_L]
+  17 |  EXPLORE |  TURN_L | ( -4.35,  -3.45, 150.0°) |      nan |    64 |    74
+       [WF-FOLLOW(N) → FORWARD]
+  18 |  EXPLORE | FORWARD | ( -4.32,  -3.48, 180.0°) |      nan |    64 |    83
+       [WF-FOLLOW(N) → FORWARD]
+  19 |  EXPLORE | FORWARD | ( -4.51,  -3.51, 180.0°) |      nan |    64 |    83
+       [WF-FOLLOW(N) → FORWARD]
+  20 |  EXPLORE | FORWARD | ( -4.76,  -3.54, 180.0°) |      nan |    64 |    84
+       [WF-FOLLOW(N) → TURN_R]
+  21 |  EXPLORE |  TURN_R | ( -5.04,  -3.57, 180.0°) |      nan |    64 |    82
+       [WF-FOLLOW(N) → FORWARD]
+  22 |  EXPLORE | FORWARD | ( -5.07,  -3.59, 150.0°) |      nan |    64 |    74
+       [WF-FOLLOW(N) → FORWARD]
+  23 |  EXPLORE | FORWARD | ( -5.24,  -3.53, 150.0°) |      nan |    64 |    74
+       [WF-FOLLOW(N) → FORWARD]
+  24 |  EXPLORE | FORWARD | ( -5.42,  -3.49, 150.0°) |      nan |    64 |    73
+       [WF-FOLLOW(N) → FORWARD]
+  25 |  EXPLORE | FORWARD | ( -5.62,  -3.46, 150.0°) |      nan |    64 |    72
+       [WF-FOLLOW(N) → TURN_R]
+  26 |  EXPLORE |  TURN_R | ( -5.83,  -3.43, 150.0°) |      nan |    64 |    72
+       [WF-FOLLOW(N) → FORWARD]
+  27 |  EXPLORE | FORWARD | ( -5.83,  -3.43, 120.0°) |      nan |    64 |    61
+       [WF-FOLLOW(N) → FORWARD]
+  28 |  EXPLORE | FORWARD | ( -5.96,  -3.43, 120.0°) |      nan |    64 |    61
+       [WF-FOLLOW(N) → FORWARD]
+  29 |  EXPLORE | FORWARD | ( -6.10,  -3.43, 120.0°) |      nan |    64 |    61
+       [WF-FOLLOW(N) → FORWARD]
+  30 |  EXPLORE | FORWARD | ( -6.25,  -3.43, 120.0°) |      nan |    64 |    61
+       [WF-FOLLOW(N) → TURN_R]
+  31 |  EXPLORE |  TURN_R | ( -6.44,  -3.43, 120.0°) |      nan |    64 |    61
+       [WF-FOLLOW(N) → FORWARD]
+  32 |  EXPLORE | FORWARD | ( -6.44,  -3.43,  90.0°) |      nan |    64 |    59
+       [collision]
+       [WF-FOLLOW(N) → TURN_L]
+  33 |  EXPLORE |  TURN_L | ( -6.44,  -3.43,  90.0°) |      nan |    64 |    61
+       [WF-FOLLOW(N) → FORWARD]
+  34 |  EXPLORE | FORWARD | ( -6.53,  -3.44, 120.0°) |      nan |    64 |    61
+       [WF-FOLLOW(N) → FORWARD]
+  35 |  EXPLORE | FORWARD | ( -6.74,  -3.44, 120.0°) |      nan |    64 |    60
+       [WF-FOLLOW(N) → FORWARD]
+  36 |  EXPLORE | FORWARD | ( -6.87,  -3.44, 120.0°) |      nan |    64 |    60
+       [WF-FOLLOW(N) → TURN_R]
+  37 |  EXPLORE |  TURN_R | ( -6.99,  -3.44, 120.0°) |      nan |    64 |    60
+       [WF-FOLLOW(N) → FORWARD]
+  38 |  EXPLORE | FORWARD | ( -6.99,  -3.44,  90.0°) |      nan |    64 |    59
+       [collision]
+       [WF-FOLLOW(N) → TURN_L]
+  39 |  EXPLORE |  TURN_L | ( -6.99,  -3.44,  90.0°) |      nan |    64 |    62
+       [WF-FOLLOW(N) → FORWARD]
+  40 |  EXPLORE | FORWARD | ( -6.99,  -3.44, 120.0°) |      nan |    64 |    60
+       [WF-FOLLOW(N) → FORWARD]
+  41 |  EXPLORE | FORWARD | ( -7.12,  -3.44, 120.0°) |      nan |    64 |    60
+       [WF-FOLLOW(N) → FORWARD]
+  42 |  EXPLORE | FORWARD | ( -7.24,  -3.44, 120.0°) |      nan |    64 |    60
+       [WF-FOLLOW(N) → TURN_R]
+  43 |  EXPLORE |  TURN_R | ( -7.37,  -3.44, 120.0°) |      nan |    64 |    59
+       [WF-FOLLOW(N) → FORWARD]
+  44 |  EXPLORE | FORWARD | ( -7.37,  -3.44,  90.0°) |      nan |    64 |    60
+       [collision]
+       [WF-FOLLOW(N) → TURN_L]
+  45 |  EXPLORE |  TURN_L | ( -7.37,  -3.44,  90.0°) |      nan |    64 |    63
+       [WF-FOLLOW(N) → FORWARD]
+  46 |  EXPLORE | FORWARD | ( -7.37,  -3.44, 120.0°) |      nan |    64 |    60
+       [WF-ALIGN(W) → TURN_L]
+  47 |  EXPLORE |  TURN_L | ( -7.49,  -3.44, 120.0°) |      nan |    64 |    59
+       [WF-ALIGN(W) → TURN_L]
+  48 |  EXPLORE |  TURN_L | ( -7.69,  -3.42, 150.0°) |      nan |    64 |    72
+       [WF-SEEK(W) → FORWARD]
+  49 |  EXPLORE | FORWARD | ( -7.69,  -3.42, 180.0°) |      nan |    64 |    78
+       [WF-SEEK(W) → FORWARD]
+  50 |  EXPLORE | FORWARD | ( -7.94,  -3.42, 180.0°) |      nan |    64 |    57
+       [WF-SEEK(W) → FORWARD]
+  51 |  EXPLORE | FORWARD | ( -8.09,  -3.42, 180.0°) |      nan |    64 |    58
+       [collision]
+       [WF-FOLLOW(W) → TURN_L]
+  52 |  EXPLORE |  TURN_L | ( -8.09,  -3.42, 180.0°) |      nan |    64 |    62
+       [WF-FOLLOW(W) → TURN_L]
+  53 |  EXPLORE |  TURN_L | ( -8.09,  -3.42, -150.0°) |      nan |    64 |    59
+       [WF-FOLLOW(W) → TURN_L]
+  54 |  EXPLORE |  TURN_L | ( -8.08,  -3.45, -120.0°) |      nan |    64 |    72
+       [WF-FOLLOW(W) → FORWARD]
+  55 |  EXPLORE | FORWARD | ( -8.08,  -3.45, -90.0°) |      nan |    64 |    82
+       [WF-FOLLOW(W) → FORWARD]
+  56 |  EXPLORE | FORWARD | ( -8.08,  -3.71, -90.0°) |      nan |    64 |    81
+       [WF-FOLLOW(W) → FORWARD]
+  57 |  EXPLORE | FORWARD | ( -8.10,  -3.96, -90.0°) |      nan |    64 |    80
+       [WF-FOLLOW(W) → TURN_R]
+  58 |  EXPLORE |  TURN_R | ( -8.15,  -4.21, -90.0°) |      nan |    64 |    83
+       [WF-FOLLOW(W) → FORWARD]
+  59 |  EXPLORE | FORWARD | ( -8.15,  -4.22, -120.0°) |      nan |    64 |    73
+       [WF-FOLLOW(W) → FORWARD]
+  60 |  EXPLORE | FORWARD | ( -8.15,  -4.44, -120.0°) |      nan |    64 |    72
+       [collision]
+       [WF-FOLLOW(W) → TURN_L]
+  61 |  EXPLORE |  TURN_L | ( -8.15,  -4.47, -120.0°) |      nan |    64 |    74
+       [WF-FOLLOW(W) → FORWARD]
+  62 |  EXPLORE | FORWARD | ( -8.20,  -4.49, -90.0°) |      nan |    64 |    81
+       [collision]
+       [WF-FOLLOW(W) → TURN_L]
+  63 |  EXPLORE |  TURN_L | ( -8.18,  -4.46, -90.0°) |      nan |    64 |    84
+       [WF-FOLLOW(W) → FORWARD]
+  64 |  EXPLORE | FORWARD | ( -8.08,  -4.47, -60.0°) |      nan |    64 |    91
+       [WF-FOLLOW(W) → FORWARD]
+  65 |  EXPLORE | FORWARD | ( -7.93,  -4.49, -60.0°) |      nan |    64 |    89
+       [WF-FOLLOW(W) → FORWARD]
+  66 |  EXPLORE | FORWARD | ( -7.77,  -4.51, -60.0°) |      nan |    64 |    91
+       [WF-FOLLOW(W) → TURN_R]
+  67 |  EXPLORE |  TURN_R | ( -7.63,  -4.73, -60.0°) |      nan |    64 |    94
+       [WF-FOLLOW(W) → FORWARD]
+  68 |  EXPLORE | FORWARD | ( -7.62,  -4.69, -90.0°) |      nan |    64 |    90
+       [WF-FOLLOW(W) → FORWARD]
+  69 |  EXPLORE | FORWARD | ( -7.61,  -4.90, -90.0°) |      nan |    64 |    89
+       [WF-FOLLOW(W) → FORWARD]
+  70 |  EXPLORE | FORWARD | ( -7.60,  -5.17, -90.0°) |      nan |    64 |    88
+       [WF-FOLLOW(W) → FORWARD]
+  71 |  EXPLORE | FORWARD | ( -7.60,  -5.45, -90.0°) |      nan |    64 |    89
+       [WF-FOLLOW(W) → TURN_R]
+  72 |  EXPLORE |  TURN_R | ( -7.59,  -5.73, -90.0°) |      nan |    64 |    89
+       [WF-FOLLOW(W) → FORWARD]
+  73 |  EXPLORE | FORWARD | ( -7.59,  -5.73, -120.0°) |      nan |    64 |    89
+       [WF-FOLLOW(W) → FORWARD]
+  74 |  EXPLORE | FORWARD | ( -7.72,  -5.94, -120.0°) |      nan |    64 |    89
+       [WF-FOLLOW(W) → FORWARD]
+  75 |  EXPLORE | FORWARD | ( -7.84,  -6.19, -120.0°) |      nan |    64 |    81
+       [WF-FOLLOW(W) → FORWARD]
+  76 |  EXPLORE | FORWARD | ( -7.95,  -6.46, -120.0°) |      nan |    64 |    75
+       [WF-FOLLOW(W) → TURN_R]
+  77 |  EXPLORE |  TURN_R | ( -7.96,  -6.74, -120.0°) |      nan |    64 |    73
+       [WF-FOLLOW(W) → FORWARD]
+  78 |  EXPLORE | FORWARD | ( -7.98,  -6.75, -150.0°) |      nan |    64 |    62
+       [WF-FOLLOW(W) → FORWARD]
+  79 |  EXPLORE | FORWARD | ( -8.00,  -6.93, -150.0°) |      nan |    64 |    61
+       [WF-FOLLOW(W) → FORWARD]
+  80 |  EXPLORE | FORWARD | ( -8.01,  -7.14, -150.0°) |      nan |    64 |    61
+       [WF-FOLLOW(W) → FORWARD]
+  81 |  EXPLORE | FORWARD | ( -8.01,  -7.27, -150.0°) |      nan |    64 |    58
+       [WF-FOLLOW(W) → TURN_R]
+  82 |  EXPLORE |  TURN_R | ( -8.01,  -7.37, -150.0°) |      nan |    64 |    58
+       [WF-FOLLOW(W) → FORWARD]
+  83 |  EXPLORE | FORWARD | ( -8.01,  -7.37, 180.0°) |      nan |    64 |    58
+       [collision]
+       [WF-ALIGN(S) → TURN_L]
+  84 |  EXPLORE |  TURN_L | ( -8.01,  -7.37, 180.0°) |      nan |    64 |    62
+       [WF-ALIGN(S) → TURN_L]
+  85 |  EXPLORE |  TURN_L | ( -8.01,  -7.37, -150.0°) |      nan |    64 |    58
+       [WF-ALIGN(S) → TURN_L]
+  86 |  EXPLORE |  TURN_L | ( -8.01,  -7.37, -120.0°) |      nan |    64 |    58
+       [WF-SEEK(S) → FORWARD]
+  87 |  EXPLORE | FORWARD | ( -8.01,  -7.37, -90.0°) |      nan |    64 |    57
+       [collision]
+       [WF-FOLLOW(S) → TURN_L]
+  88 |  EXPLORE |  TURN_L | ( -8.01,  -7.37, -90.0°) |      nan |    64 |    59
+       [WF-FOLLOW(S) → TURN_L]
+  89 |  EXPLORE |  TURN_L | ( -7.99,  -7.42, -60.0°) |      nan |    64 |    65
+       [WF-FOLLOW(S) → TURN_L]
+  90 |  EXPLORE |  TURN_L | ( -7.99,  -7.42, -30.0°) |      nan |    64 |    75
+       [WF-FOLLOW(S) → FORWARD]
+  91 |  EXPLORE | FORWARD | ( -7.99,  -7.42,  -0.0°) |      nan |    64 |    85
+       [WF-FOLLOW(S) → FORWARD]
+  92 |  EXPLORE | FORWARD | ( -7.74,  -7.42,  -0.0°) |      nan |    64 |    84
+       [WF-FOLLOW(S) → FORWARD]
+  93 |  EXPLORE | FORWARD | ( -7.48,  -7.42,  -0.0°) |      nan |    64 |    84
+       [WF-FOLLOW(S) → TURN_R]
+  94 |  EXPLORE |  TURN_R | ( -7.28,  -7.43,  -0.0°) |      nan |    64 |    84
+       [WF-FOLLOW(S) → FORWARD]
+  95 |  EXPLORE | FORWARD | ( -7.32,  -7.44, -30.0°) |      nan |    64 |    76
+       [WF-FOLLOW(S) → FORWARD]
+  96 |  EXPLORE | FORWARD | ( -7.06,  -7.44, -30.0°) |      nan |    64 |    76
+       [WF-FOLLOW(S) → FORWARD]
+  97 |  EXPLORE | FORWARD | ( -6.84,  -7.48, -30.0°) |      nan |    64 |    74
+       [WF-FOLLOW(S) → FORWARD]
+  98 |  EXPLORE | FORWARD | ( -6.62,  -7.49, -30.0°) |      nan |    64 |    74
+       [WF-FOLLOW(S) → TURN_R]
+  99 |  EXPLORE |  TURN_R | ( -6.40,  -7.51, -30.0°) |      nan |    64 |    73
+       [WF-FOLLOW(S) → FORWARD]
+ 100 |  EXPLORE | FORWARD | ( -6.40,  -7.52, -60.0°) |      nan |    64 |    59
+       [WF-FOLLOW(S) → FORWARD]
+ 101 |  EXPLORE | FORWARD | ( -6.27,  -7.52, -60.0°) |      nan |    64 |    58
+       [WF-FOLLOW(S) → FORWARD]
+ 102 |  EXPLORE | FORWARD | ( -6.22,  -7.52, -60.0°) |      nan |    64 |    58
+       [collision]
+       [WF-FOLLOW(S) → TURN_L]
+ 103 |  EXPLORE |  TURN_L | ( -6.22,  -7.52, -60.0°) |      nan |    64 |    62
+       [WF-FOLLOW(S) → FORWARD]
+ 104 |  EXPLORE | FORWARD | ( -6.23,  -7.51, -30.0°) |      nan |    64 |    63
+       [collision]
+       [WF-FOLLOW(S) → TURN_L]
+ 105 |  EXPLORE |  TURN_L | ( -6.23,  -7.50, -30.0°) |      nan |    64 |    67
+       [WF-FOLLOW(S) → FORWARD]
+ 106 |  EXPLORE | FORWARD | ( -6.22,  -7.47,  -0.0°) |      nan |    64 |    73
+       [WF-FOLLOW(S) → FORWARD]
+ 107 |  EXPLORE | FORWARD | ( -6.21,  -7.38,  -0.0°) |      nan |    64 |    78
+       [WF-FOLLOW(S) → FORWARD]
+ 108 |  EXPLORE | FORWARD | ( -6.20,  -7.29,  -0.0°) |      nan |    64 |    82
+       [WF-FOLLOW(S) → TURN_R]
+ 109 |  EXPLORE |  TURN_R | ( -6.21,  -7.29,  -0.0°) |      nan |    64 |    83
+       [WF-FOLLOW(S) → FORWARD]
+ 110 |  EXPLORE | FORWARD | ( -6.20,  -7.33, -30.0°) |      nan |    64 |    76
+       [WF-FOLLOW(S) → FORWARD]
+ 111 |  EXPLORE | FORWARD | ( -6.21,  -7.45, -30.0°) |      nan |    64 |    70
+       [WF-FOLLOW(S) → FORWARD]
+ 112 |  EXPLORE | FORWARD | ( -6.23,  -7.60, -30.0°) |      nan |    64 |    66
+       [collision]
+       [WF-FOLLOW(S) → TURN_L]
+ 113 |  EXPLORE |  TURN_L | ( -6.24,  -7.62, -30.0°) |      nan |    64 |    66
+       [WF-FOLLOW(S) → FORWARD]
+ 114 |  EXPLORE | FORWARD | ( -6.23,  -7.60,  -0.0°) |      nan |    64 |    73
+       [WF-FOLLOW(S) → FORWARD]
+ 115 |  EXPLORE | FORWARD | ( -6.21,  -7.52,  -0.0°) |      nan |    64 |    78
+       [WF-FOLLOW(S) → FORWARD]
+ 116 |  EXPLORE | FORWARD | ( -6.20,  -7.43,  -0.0°) |      nan |    64 |    82
+       [WF-FOLLOW(S) → TURN_R]
+ 117 |  EXPLORE |  TURN_R | ( -6.19,  -7.41,  -0.0°) |      nan |    64 |    84
+       [WF-FOLLOW(S) → FORWARD]
+ 118 |  EXPLORE | FORWARD | ( -6.19,  -7.44, -30.0°) |      nan |    64 |    75
+       [WF-FOLLOW(S) → FORWARD]
+ 119 |  EXPLORE | FORWARD | ( -6.20,  -7.55, -30.0°) |      nan |    64 |    71
+ 120 |  EXPLORE |  TURN_L | ( -6.21,  -7.62, -30.0°) |      nan |    64 |   221
+
+============================================================
+  EXPLORATION COMPLETE at step 121  [early (belief saturated)]  (64 active slots in belief map)
+  Switching to NAVIGATION phase...
+  Goal (V6)    : (-6.15, -2.85)
+  Waypoints    : 4
+    wp[0] = (-4.25, -5.79)
+    wp[1] = (-3.45, -4.84)
+    wp[2] = (-3.50, -2.99)
+    wp[3] = (-6.15, -2.85)
+============================================================
+
+ 121 | NAVIGATE |  TURN_L | ( -6.20,  -7.60,  -0.0°) |    3.899 |    64 |   103
+ 122 | NAVIGATE | FORWARD | ( -6.24,  -7.63,  30.0°) |    3.951 |    64 |    86
+ 123 | NAVIGATE | FORWARD | ( -6.07,  -7.51,  30.0°) |    3.738 |    64 |    91
+ 124 | NAVIGATE |  TURN_L | ( -5.86,  -7.41,  30.0°) |    3.524 |    64 |    90
+ 125 | NAVIGATE | FORWARD | ( -5.88,  -7.47,  60.0°) |    3.577 |    64 |    91
+ 126 | NAVIGATE | FORWARD | ( -5.76,  -7.26,  60.0°) |    3.342 |    64 |    92
+ 127 | NAVIGATE | FORWARD | ( -5.62,  -7.05,  60.0°) |    3.101 |    64 |    91
+ 128 | NAVIGATE | FORWARD | ( -5.52,  -6.97,  60.0°) |    2.972 |    64 |    89
+ 129 | NAVIGATE | FORWARD | ( -5.40,  -7.01,  60.0°) |    2.919 |    64 |    91
+ 130 | NAVIGATE | FORWARD | ( -5.30,  -7.05,  60.0°) |    2.883 |    64 |    90
+ 131 | NAVIGATE | FORWARD | ( -5.13,  -7.05,  60.0°) |    2.777 |    64 |    91
+ 132 | NAVIGATE | FORWARD | ( -4.96,  -7.01,  60.0°) |    2.640 |    64 |    92
+ 133 | NAVIGATE | FORWARD | ( -4.78,  -6.94,  60.0°) |    2.486 |    64 |    91
+ 134 | NAVIGATE | FORWARD | ( -4.65,  -6.76,  60.0°) |    2.267 |    64 |    91
+ 135 | NAVIGATE | FORWARD | ( -4.49,  -6.62,  60.0°) |    2.065 |    64 |    89
+ 136 | NAVIGATE | FORWARD | ( -4.42,  -6.65,  60.0°) |    2.056 |    64 |    88
+  >> wp[2]/3: (-3.50, -2.99)
+       [VIA-DOOR activated → doorway at (-3.06, -3.60)]
+ 137 | NAVIGATE | FORWARD | ( -4.29,  -6.44,  60.0°) |    3.540 |    64 |    89 [VIA-DOOR]
+ 138 | NAVIGATE | FORWARD | ( -4.15,  -6.44,  60.0°) |    3.043 |    64 |    88 [VIA-DOOR]
+ 139 | NAVIGATE | FORWARD | ( -3.98,  -6.47,  60.0°) |    3.018 |    64 |    89 [VIA-DOOR]
+ 140 | NAVIGATE | FORWARD | ( -3.85,  -6.26,  60.0°) |    2.774 |    64 |    90 [VIA-DOOR]
+ 141 | NAVIGATE | FORWARD | ( -3.71,  -6.02,  60.0°) |    2.505 |    64 |    90 [VIA-DOOR]
+ 142 | NAVIGATE |  TURN_L | ( -3.60,  -5.82,  60.0°) |    2.285 |    64 |    88 [VIA-DOOR]
+ 143 | NAVIGATE | FORWARD | ( -3.61,  -5.82,  90.0°) |    2.289 |    64 |    89 [VIA-DOOR]
+ 144 | NAVIGATE | FORWARD | ( -3.59,  -5.61,  90.0°) |    2.076 |    64 |    90 [VIA-DOOR]
+ 145 | NAVIGATE | FORWARD | ( -3.60,  -5.36,  90.0°) |    1.845 |    64 |    88 [VIA-DOOR]
+ 146 | NAVIGATE | FORWARD | ( -3.61,  -5.11,  90.0°) |    1.611 |    64 |    88 [VIA-DOOR]
+  >> wp[3]/3: (-6.15, -2.85)
+ 147 | NAVIGATE |  TURN_R | ( -3.62,  -4.87,  90.0°) |    3.237 |    64 |    90 [VIA-DOOR]
+       [final-approach: h_err=-68° → TURN_R]
+ 148 | NAVIGATE |  TURN_R | ( -3.65,  -4.90,  60.0°) |    1.434 |    64 |    86 [VIA-DOOR]
+       [final-approach: h_err=-38° → TURN_R]
+ 149 | NAVIGATE |  TURN_R | ( -3.65,  -4.90,  30.0°) |    1.434 |    64 |    87 [VIA-DOOR]
+       [final-approach: h_err=-8° → FORWARD]
+ 150 | NAVIGATE | FORWARD | ( -3.63,  -4.93,  -0.0°) |    1.453 |    64 |    87 [VIA-DOOR]
+       [final-approach: h_err=-113° → TURN_R]
+ 151 | NAVIGATE |  TURN_R | ( -3.38,  -4.96,  -0.0°) |    1.391 |    64 |    87 [VIA-DOOR]
+       [final-approach: h_err=-83° → TURN_R]
+ 152 | NAVIGATE |  TURN_R | ( -3.38,  -4.90, -30.0°) |    1.337 |    64 |    86 [VIA-DOOR]
+       [final-approach: h_err=-53° → TURN_R]
+ 153 | NAVIGATE |  TURN_R | ( -3.38,  -4.90, -60.0°) |    1.337 |    64 |    86 [VIA-DOOR]
+       [final-approach: h_err=-23° → FORWARD]
+ 154 | NAVIGATE | FORWARD | ( -3.31,  -4.85, -90.0°) |    1.269 |    64 |    92 [VIA-DOOR]
+ 155 | NAVIGATE |  TURN_R | ( -3.31,  -5.10, -90.0°) |    1.515 |    64 |    89 [VIA-DOOR]
+       [final-approach: h_err=-146° → TURN_R]
+ 156 | NAVIGATE |  TURN_R | ( -3.27,  -5.09, -120.0°) |    1.489 |    64 |    90 [VIA-DOOR]
+       [final-approach: h_err=-116° → TURN_R]
+ 157 | NAVIGATE |  TURN_R | ( -3.27,  -5.08, -150.0°) |    1.479 |    64 |    90 [VIA-DOOR]
+       [final-approach: h_err=-86° → TURN_R]
+ 158 | NAVIGATE |  TURN_R | ( -3.30,  -5.08, 180.0°) |    1.492 |    64 |    92 [VIA-DOOR]
+ 159 | NAVIGATE |  TURN_R | ( -3.35,  -5.09, 150.0°) |    1.513 |    64 |    86 [VIA-DOOR]
+ 160 | NAVIGATE |  TURN_R | ( -3.38,  -5.11, 120.0°) |    1.538 |    64 |    88 [VIA-DOOR]
+       [spin-override: h_err=4° → FORWARD]
+ 161 | NAVIGATE | FORWARD | ( -3.35,  -5.12,  90.0°) |    1.535 |    64 |    89 [VIA-DOOR]
+       [final-approach: h_err=157° → TURN_L]
+ 162 | NAVIGATE |  TURN_L | ( -3.35,  -4.86,  90.0°) |    1.290 |    64 |    88 [VIA-DOOR]
+       [final-approach: h_err=127° → TURN_L]
+ 163 | NAVIGATE |  TURN_L | ( -3.30,  -4.87, 120.0°) |    1.284 |    64 |    88 [VIA-DOOR]
+       [final-approach: h_err=97° → TURN_L]
+ 164 | NAVIGATE |  TURN_L | ( -3.30,  -4.88, 150.0°) |    1.292 |    64 |    89 [VIA-DOOR]
+       [final-approach: h_err=67° → TURN_L]
+ 165 | NAVIGATE |  TURN_L | ( -3.34,  -4.90, 180.0°) |    1.325 |    64 |    89 [VIA-DOOR]
+       [final-approach: h_err=37° → TURN_L]
+ 166 | NAVIGATE |  TURN_L | ( -3.30,  -4.89, -150.0°) |    1.299 |    64 |    91 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-73° → TURN_R]
+ 167 | NAVIGATE |  TURN_R | ( -3.27,  -4.84, -120.0°) |    1.246 |    64 |    88
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 168 | NAVIGATE |  TURN_R | ( -3.23,  -4.82, -150.0°) |    3.530 |    64 |    91 [VIA-DOOR]
+       [final-approach: h_err=67° → TURN_L]
+ 169 | NAVIGATE |  TURN_L | ( -3.26,  -4.85, 180.0°) |    1.254 |    64 |    89 [VIA-DOOR]
+       [final-approach: h_err=37° → TURN_L]
+ 170 | NAVIGATE |  TURN_L | ( -3.22,  -4.83, -150.0°) |    1.233 |    64 |    92 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-73° → TURN_R]
+ 171 | NAVIGATE |  TURN_R | ( -3.17,  -4.77, -120.0°) |    1.162 |    64 |    90
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 172 | NAVIGATE |  TURN_R | ( -3.13,  -4.76, -150.0°) |    3.575 |    64 |    93 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-13° → FORWARD]
+ 173 | NAVIGATE | FORWARD | ( -3.16,  -4.78, 180.0°) |    1.174 |    64 |    89
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 174 | NAVIGATE |  TURN_R | ( -3.41,  -4.79, 180.0°) |    3.359 |    64 |    89 [VIA-DOOR]
+       [final-approach: h_err=-158° → TURN_R]
+ 175 | NAVIGATE |  TURN_R | ( -3.38,  -4.80, 150.0°) |    1.241 |    64 |    90 [VIA-DOOR]
+       [final-approach: h_err=-128° → TURN_R]
+ 176 | NAVIGATE |  TURN_R | ( -3.37,  -4.81, 120.0°) |    1.246 |    64 |    88 [VIA-DOOR]
+       [final-approach: h_err=-98° → TURN_R]
+ 177 | NAVIGATE |  TURN_R | ( -3.38,  -4.80,  90.0°) |    1.235 |    64 |    89 [VIA-DOOR]
+       [final-approach: h_err=-68° → TURN_R]
+ 178 | NAVIGATE |  TURN_R | ( -3.38,  -4.80,  60.0°) |    1.236 |    64 |    87 [VIA-DOOR]
+       [final-approach: h_err=-38° → TURN_R]
+ 179 | NAVIGATE |  TURN_R | ( -3.38,  -4.80,  30.0°) |    1.237 |    64 |    87 [VIA-DOOR]
+       [final-approach: h_err=-8° → FORWARD]
+ 180 | NAVIGATE | FORWARD | ( -3.37,  -4.82,  -0.0°) |    1.256 |    64 |    87 [VIA-DOOR]
+       [final-approach: h_err=-113° → TURN_R]
+ 181 | NAVIGATE |  TURN_R | ( -3.12,  -4.85,  -0.0°) |    1.231 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 182 | NAVIGATE |  TURN_R | ( -3.12,  -4.79, -30.0°) |    1.178 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 183 | NAVIGATE |  TURN_L | ( -3.12,  -4.79, -60.0°) |    3.606 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 184 | NAVIGATE |  TURN_R | ( -3.12,  -4.79, -30.0°) |    1.176 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 185 | NAVIGATE |  TURN_L | ( -3.12,  -4.79, -60.0°) |    3.605 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 186 | NAVIGATE |  TURN_R | ( -3.12,  -4.79, -30.0°) |    1.174 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 187 | NAVIGATE |  TURN_L | ( -3.12,  -4.79, -60.0°) |    3.604 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 188 | NAVIGATE |  TURN_R | ( -3.12,  -4.79, -30.0°) |    1.171 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 189 | NAVIGATE |  TURN_L | ( -3.12,  -4.79, -60.0°) |    3.603 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 190 | NAVIGATE |  TURN_R | ( -3.12,  -4.79, -30.0°) |    1.169 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 191 | NAVIGATE |  TURN_L | ( -3.12,  -4.79, -60.0°) |    3.602 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 192 | NAVIGATE |  TURN_R | ( -3.12,  -4.78, -30.0°) |    1.167 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 193 | NAVIGATE |  TURN_L | ( -3.12,  -4.78, -60.0°) |    3.601 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 194 | NAVIGATE |  TURN_R | ( -3.12,  -4.78, -30.0°) |    1.166 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 195 | NAVIGATE |  TURN_L | ( -3.12,  -4.78, -60.0°) |    3.600 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 196 | NAVIGATE |  TURN_R | ( -3.12,  -4.78, -30.0°) |    1.165 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 197 | NAVIGATE |  TURN_L | ( -3.12,  -4.78, -60.0°) |    3.599 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 198 | NAVIGATE |  TURN_R | ( -3.12,  -4.78, -30.0°) |    1.164 |    64 |    85
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 199 | NAVIGATE |  TURN_L | ( -3.12,  -4.78, -60.0°) |    3.599 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 200 | NAVIGATE |  TURN_R | ( -3.12,  -4.78, -30.0°) |    1.164 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 201 | NAVIGATE |  TURN_L | ( -3.12,  -4.78, -60.0°) |    3.599 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 202 | NAVIGATE |  TURN_R | ( -3.12,  -4.78, -30.0°) |    1.163 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 203 | NAVIGATE |  TURN_L | ( -3.12,  -4.78, -60.0°) |    3.598 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 204 | NAVIGATE |  TURN_R | ( -3.12,  -4.78, -30.0°) |    1.162 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 205 | NAVIGATE |  TURN_L | ( -3.12,  -4.78, -60.0°) |    3.598 |    64 |    89 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 206 | NAVIGATE |  TURN_R | ( -3.12,  -4.78, -30.0°) |    1.161 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 207 | NAVIGATE |  TURN_L | ( -3.12,  -4.78, -60.0°) |    3.597 |    64 |    88 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 208 | NAVIGATE |  TURN_R | ( -3.12,  -4.78, -30.0°) |    1.161 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 209 | NAVIGATE |  TURN_L | ( -3.12,  -4.78, -60.0°) |    3.597 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 210 | NAVIGATE |  TURN_R | ( -3.12,  -4.78, -30.0°) |    1.160 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 211 | NAVIGATE |  TURN_L | ( -3.12,  -4.78, -60.0°) |    3.597 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 212 | NAVIGATE |  TURN_R | ( -3.12,  -4.78, -30.0°) |    1.159 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 213 | NAVIGATE |  TURN_L | ( -3.12,  -4.78, -60.0°) |    3.596 |    64 |    88 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 214 | NAVIGATE |  TURN_R | ( -3.12,  -4.78, -30.0°) |    1.159 |    64 |    96
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 215 | NAVIGATE |  TURN_L | ( -3.12,  -4.78, -60.0°) |    3.596 |    64 |    88 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 216 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.158 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 217 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.596 |    64 |    88 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 218 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.158 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 219 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.595 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 220 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.157 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 221 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.595 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 222 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.157 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 223 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.595 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 224 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.156 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 225 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.595 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 226 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.156 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 227 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.594 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 228 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.156 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 229 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.594 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 230 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.155 |    64 |    85
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 231 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.594 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 232 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.155 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 233 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.594 |    64 |    85 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 234 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.154 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 235 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.594 |    64 |    88 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 236 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.154 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 237 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.593 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 238 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.154 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 239 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.593 |    64 |    85 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 240 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.153 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 241 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.593 |    64 |    90 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 242 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.153 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 243 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.593 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 244 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.153 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 245 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.593 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 246 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.152 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 247 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.593 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 248 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.152 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 249 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.592 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 250 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.152 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 251 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.592 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 252 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.151 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 253 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.592 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 254 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.151 |    64 |    85
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 255 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.592 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 256 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.151 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 257 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.592 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 258 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.150 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 259 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.592 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 260 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.150 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 261 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.591 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 262 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.150 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 263 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.591 |    64 |    88 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 264 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.150 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 265 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.591 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 266 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.149 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 267 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.591 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 268 | NAVIGATE |  TURN_R | ( -3.12,  -4.77, -30.0°) |    1.149 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 269 | NAVIGATE |  TURN_L | ( -3.12,  -4.77, -60.0°) |    3.591 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 270 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.149 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 271 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.591 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 272 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.149 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 273 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.591 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 274 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.148 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 275 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.590 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 276 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.148 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 277 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.590 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 278 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.148 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 279 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.590 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 280 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.148 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 281 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.590 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 282 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.147 |    64 |    88
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 283 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.590 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 284 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.147 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 285 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.590 |    64 |    88 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 286 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.147 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 287 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.590 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 288 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.147 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 289 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.590 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 290 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.147 |    64 |    85
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 291 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.590 |    64 |    85 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 292 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.146 |    64 |    85
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 293 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.589 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 294 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.146 |    64 |    85
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 295 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.589 |    64 |    85 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 296 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.146 |    64 |    88
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 297 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.589 |    64 |    85 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 298 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.146 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 299 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.589 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 300 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.146 |    64 |    85
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 301 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.589 |    64 |    86 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 302 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.145 |    64 |    85
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 303 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.589 |    64 |    85 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 304 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.145 |    64 |    85
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 305 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.589 |    64 |    90 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 306 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.145 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 307 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.589 |    64 |    88 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 308 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.145 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 309 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.589 |    64 |    89 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 310 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.145 |    64 |    85
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 311 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.589 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 312 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.144 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 313 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.588 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 314 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.144 |    64 |    87
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 315 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.588 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 316 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.144 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 317 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.588 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 318 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.144 |    64 |    86
+       [VIA-DOOR activated → doorway at (-2.99, -3.62)]
+ 319 | NAVIGATE |  TURN_L | ( -3.12,  -4.76, -60.0°) |    3.588 |    64 |    87 [VIA-DOOR]
+       [VIA-DOOR: passed through — reverting to final nav goal]
+       [final-approach: h_err=-163° → TURN_R]
+ 320 | NAVIGATE |  TURN_R | ( -3.12,  -4.76, -30.0°) |    1.144 |    64 |    86
+
+============================================================
+  Result         : TIMEOUT
+  Steps          : 320  (160 explore + 160 navigate)
+  Final slot count: 64
+  Final goal dist: 3.588m
+  Mean ms/step   : 84
+============================================================
+  [Memory] Saved 64 occupied slots → belief_memory.pt

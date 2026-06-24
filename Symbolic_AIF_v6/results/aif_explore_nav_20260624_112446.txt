@@ -1,0 +1,148 @@
+Video → /home/nitish/Documents/AIF_code/Active-Inference/Symbolic_AIF_v6/habitat_adapter/../results/aif_explore_nav_20260624_112446.mp4
+Log   → /home/nitish/Documents/AIF_code/Active-Inference/Symbolic_AIF_v6/habitat_adapter/../results/aif_explore_nav_20260624_112446.txt
+
+Device : cuda
+WorldModelV6 : 248,064 params
+Navmesh      : (214, 158)
+
+Start pose (V6) : (-4.32, -2.54, 0.0°)
+
+Wall-follow explorer ready  (SEEK E → N → W → S)
+
+[Memory] Checking for persistent belief...
+[Memory] Restored 64 occupied slots + 300 prior explored poses  (scene matches)
+
+Step |    Phase |  Action |               Pose (x, y, θ) | GoalDist | Slots |    ms
+-------------------------------------------------------------------------------------
+       [WF-SEEK(E) → FORWARD]
+   1 |  EXPLORE | FORWARD | ( -4.31,  -2.52,   0.0°) |      nan |    64 |   557
+       [WF-SEEK(E) → FORWARD]
+   2 |  EXPLORE | FORWARD | ( -4.06,  -2.52,   0.0°) |      nan |    64 |    91
+       [WF-SEEK(E) → FORWARD]
+   3 |  EXPLORE | FORWARD | ( -3.82,  -2.55,   0.0°) |      nan |    64 |    89
+       [WF-SEEK(E) → FORWARD]
+   4 |  EXPLORE | FORWARD | ( -3.57,  -2.51,   0.0°) |      nan |    64 |    92
+       [WF-SEEK(E) → FORWARD]
+   5 |  EXPLORE | FORWARD | ( -3.35,  -2.56,   0.0°) |      nan |    64 |    91
+       [WF-SEEK(E) → FORWARD]
+   6 |  EXPLORE | FORWARD | ( -3.11,  -2.59,   0.0°) |      nan |    64 |    93
+       [WF-SEEK(E) → FORWARD]
+   7 |  EXPLORE | FORWARD | ( -2.88,  -2.63,   0.0°) |      nan |    64 |    91
+       [WF-SEEK(E) → FORWARD]
+   8 |  EXPLORE | FORWARD | ( -2.63,  -2.67,   0.0°) |      nan |    64 |    88
+       [WF-ALIGN(N) → TURN_L]
+   9 |  EXPLORE |  TURN_L | ( -2.38,  -2.67,   0.0°) |      nan |    64 |    57
+       [WF-ALIGN(N) → TURN_L]
+  10 |  EXPLORE |  TURN_L | ( -2.38,  -2.73,  30.0°) |      nan |    64 |    66
+       [WF-ALIGN(N) → TURN_L]
+  11 |  EXPLORE |  TURN_L | ( -2.37,  -2.73,  60.0°) |      nan |    64 |    76
+       [WF-SEEK(N) → FORWARD]
+  12 |  EXPLORE | FORWARD | ( -2.37,  -2.71,  90.0°) |      nan |    64 |    84
+       [WF-SEEK(N) → FORWARD]
+  13 |  EXPLORE | FORWARD | ( -2.37,  -2.50,  90.0°) |      nan |    64 |    83
+       [WF-SEEK(N) → FORWARD]
+  14 |  EXPLORE | FORWARD | ( -2.38,  -2.17,  90.0°) |      nan |    64 |    82
+       [WF-SEEK(N) → FORWARD]
+  15 |  EXPLORE | FORWARD | ( -2.38,  -1.92,  90.0°) |      nan |    64 |    82
+       [WF-SEEK(N) → FORWARD]
+  16 |  EXPLORE | FORWARD | ( -2.38,  -1.67,  90.0°) |      nan |    64 |    79
+       [WF-SEEK(N) → FORWARD]
+  17 |  EXPLORE | FORWARD | ( -2.37,  -1.38,  90.0°) |      nan |    64 |    66
+       [WF-SEEK(N) → FORWARD]
+  18 |  EXPLORE | FORWARD | ( -2.40,  -1.13,  90.0°) |      nan |    64 |    67
+       [WF-SEEK(N) → FORWARD]
+  19 |  EXPLORE | FORWARD | ( -2.32,  -0.91,  90.0°) |      nan |    64 |    73
+       [WF-ALIGN(W) → TURN_L]
+  20 |  EXPLORE |  TURN_L | ( -2.32,  -0.66,  90.0°) |      nan |    64 |    65
+       [WF-ALIGN(W) → TURN_L]
+  21 |  EXPLORE |  TURN_L | ( -2.32,  -0.66, 120.0°) |      nan |    64 |    67
+       [WF-ALIGN(W) → TURN_L]
+  22 |  EXPLORE |  TURN_L | ( -2.32,  -0.66, 150.0°) |      nan |    64 |    75
+       [WF-SEEK(W) → FORWARD]
+  23 |  EXPLORE | FORWARD | ( -2.32,  -0.66, 180.0°) |      nan |    64 |    85
+       [WF-SEEK(W) → FORWARD]
+  24 |  EXPLORE | FORWARD | ( -2.57,  -0.66, 180.0°) |      nan |    64 |    84
+       [WF-SEEK(W) → FORWARD]
+  25 |  EXPLORE | FORWARD | ( -2.85,  -0.66, 180.0°) |      nan |    64 |    75
+       [WF-SEEK(W) → FORWARD]
+  26 |  EXPLORE | FORWARD | ( -3.16,  -0.66, 180.0°) |      nan |    64 |    74
+       [WF-SEEK(W) → FORWARD]
+  27 |  EXPLORE | FORWARD | ( -3.41,  -0.66, 180.0°) |      nan |    64 |    74
+       [WF-SEEK(W) → FORWARD]
+  28 |  EXPLORE | FORWARD | ( -3.66,  -0.66, 180.0°) |      nan |    64 |    74
+       [WF-SEEK(W) → FORWARD]
+  29 |  EXPLORE | FORWARD | ( -3.93,  -0.66, 180.0°) |      nan |    64 |    75
+       [WF-SEEK(W) → FORWARD]
+  30 |  EXPLORE | FORWARD | ( -4.25,  -0.66, 180.0°) |      nan |    64 |    76
+       [WF-ALIGN(S) → TURN_L]
+  31 |  EXPLORE |  TURN_L | ( -4.50,  -0.66, 180.0°) |      nan |    64 |    74
+       [WF-ALIGN(S) → TURN_L]
+  32 |  EXPLORE |  TURN_L | ( -4.46,  -0.66, -150.0°) |      nan |    64 |    84
+       [WF-ALIGN(S) → TURN_L]
+  33 |  EXPLORE |  TURN_L | ( -4.46,  -0.64, -120.0°) |      nan |    64 |    89
+       [WF-SEEK(S) → FORWARD]
+  34 |  EXPLORE | FORWARD | ( -4.44,  -0.62, -90.0°) |      nan |    64 |    88
+       [WF-SEEK(S) → FORWARD]
+  35 |  EXPLORE | FORWARD | ( -4.43,  -0.86, -90.0°) |      nan |    64 |    90
+       [WF-SEEK(S) → FORWARD]
+  36 |  EXPLORE | FORWARD | ( -4.43,  -1.08, -90.0°) |      nan |    64 |    89
+       [WF-SEEK(S) → FORWARD]
+  37 |  EXPLORE | FORWARD | ( -4.45,  -1.32, -90.0°) |      nan |    64 |    90
+       [WF-SEEK(S) → FORWARD]
+  38 |  EXPLORE | FORWARD | ( -4.43,  -1.59, -90.0°) |      nan |    64 |    90
+       [WF-SEEK(S) → FORWARD]
+  39 |  EXPLORE | FORWARD | ( -4.37,  -1.84, -90.0°) |      nan |    64 |    89
+       [WF-SEEK(S) → FORWARD]
+  40 |  EXPLORE | FORWARD | ( -4.36,  -2.08, -90.0°) |      nan |    64 |    89
+       [WF-SEEK(S) → FORWARD]
+  41 |  EXPLORE | FORWARD | ( -4.38,  -2.33, -90.0°) |      nan |    64 |    89
+  42 |  EXPLORE |  TURN_L | ( -4.38,  -2.58, -90.0°) |      nan |    64 |    87
+
+============================================================
+  EXPLORATION COMPLETE at step 43  [early (belief saturated)]  (64 active slots in belief map)
+  Switching to NAVIGATION phase...
+  Goal (V6)    : (-0.82, 0.70)
+  Waypoints    : 2
+    wp[0] = (-2.30, -0.19)
+    wp[1] = (-0.82, 0.70)
+============================================================
+
+  43 | NAVIGATE |  TURN_L | ( -4.38,  -2.57, -60.0°) |    4.836 |    64 |   117
+  44 | NAVIGATE |  TURN_L | ( -4.37,  -2.57, -30.0°) |    4.834 |    64 |    90
+  45 | NAVIGATE |  TURN_L | ( -4.36,  -2.57,  -0.0°) |    4.823 |    64 |    90
+  46 | NAVIGATE | FORWARD | ( -4.36,  -2.53,  30.0°) |    4.800 |    64 |    88
+  47 | NAVIGATE | FORWARD | ( -4.15,  -2.44,  30.0°) |    4.575 |    64 |    87
+  48 | NAVIGATE | FORWARD | ( -3.93,  -2.29,  30.0°) |    4.319 |    64 |    87
+  49 | NAVIGATE | FORWARD | ( -3.71,  -2.14,  30.0°) |    4.054 |    64 |    85
+  50 | NAVIGATE | FORWARD | ( -3.49,  -2.01,  30.0°) |    3.803 |    64 |    86
+  51 | NAVIGATE | FORWARD | ( -3.27,  -1.90,  30.0°) |    3.576 |    64 |    84
+  52 | NAVIGATE | FORWARD | ( -3.06,  -1.76,  30.0°) |    3.331 |    64 |    87
+  53 | NAVIGATE | FORWARD | ( -2.85,  -1.56,  30.0°) |    3.042 |    64 |    90
+  54 | NAVIGATE | FORWARD | ( -2.63,  -1.44,  30.0°) |    2.806 |    64 |    86
+  55 | NAVIGATE | FORWARD | ( -2.44,  -1.31,  30.0°) |    2.585 |    64 |    70
+  56 | NAVIGATE | FORWARD | ( -2.35,  -1.19,  30.0°) |    2.437 |    64 |    58
+  57 | NAVIGATE | FORWARD | ( -2.43,  -1.08,  30.0°) |    2.400 |    64 |    59
+  58 | NAVIGATE | FORWARD | ( -2.44,  -0.95,  30.0°) |    2.315 |    64 |    62
+  59 | NAVIGATE | FORWARD | ( -2.34,  -0.81,  30.0°) |    2.149 |    64 |    68
+  60 | NAVIGATE | FORWARD | ( -2.32,  -0.71,  30.0°) |    2.063 |    64 |    79
+  61 | NAVIGATE | FORWARD | ( -2.09,  -0.58,  30.0°) |    1.806 |    64 |    88
+  62 | NAVIGATE | FORWARD | ( -1.88,  -0.39,  30.0°) |    1.519 |    64 |    89
+       [final-approach: h_err=24° → FORWARD]
+  63 | NAVIGATE | FORWARD | ( -1.66,  -0.22,  30.0°) |    1.248 |    64 |    99
+       [final-approach: h_err=29° → FORWARD]
+  64 | NAVIGATE | FORWARD | ( -1.43,  -0.06,  30.0°) |    0.979 |    64 |    89
+       [final-approach: h_err=36° → TURN_L]
+  65 | NAVIGATE |  TURN_L | ( -1.20,   0.13,  30.0°) |    0.685 |    64 |    88
+       [final-approach: h_err=6° → FORWARD]
+  66 | NAVIGATE | FORWARD | ( -1.22,   0.14,  60.0°) |    0.691 |    64 |    87
+
+  >> GOAL REACHED at step 67!
+
+============================================================
+  Result         : SUCCESS
+  Steps          : 67  (160 explore + 0 navigate)
+  Final slot count: 64
+  Final goal dist: 0.443m
+  Mean ms/step   : 89
+============================================================
+  [Memory] Saved 64 occupied slots → belief_memory.pt

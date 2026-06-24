@@ -42,10 +42,41 @@ class PerceptionConfig:
 
 
 @dataclass
+class StructuralConfig:
+    """Parameters for the depth-based wall / doorway detector."""
+    # Vertical analysis band (fraction of image height; avoids floor + ceiling)
+    band_frac_top: float = 0.25   # skip top 25%  (ceiling)
+    band_frac_bot: float = 0.65   # skip bottom 35% (floor)
+
+    # Usable depth range for wall classification
+    wall_min_depth: float = 0.30  # metres — too close = unreliable
+    wall_max_depth: float = 5.00  # metres — farther walls are too noisy
+
+    # Flatness criterion: max inter-quartile range (Q75−Q25) to call a column "wall"
+    wall_iqr_max:  float = 0.25   # metres
+
+    # Min contiguous wall columns to count as a wall segment
+    wall_min_cols: int   = 12     # ~4° arc at 256px / 90° HFOV
+
+    # Column depth smoothing (box filter kernel width in pixels)
+    smooth_kernel: int   = 5
+
+    # Doorway geometry (real-world metres)
+    door_min_width_m: float = 0.50
+    door_max_width_m: float = 2.50
+    # Gap depth must exceed adjacent wall depth by at least this much
+    door_depth_jump:  float = 1.50   # metres
+
+    # Per-frame output caps
+    max_wall_dets: int = 4
+    max_door_dets: int = 3
+
+
+@dataclass
 class SlotConfig:
-    num_slots: int = 64
-    # COCO has 91 categories; we keep 91 + 1 background
-    num_classes: int = 92
+    num_slots: int = 128        # doubled from 64 — richer multi-room scene coverage
+    # COCO 91 classes + background (0) + WALL (92) + DOORWAY (93)
+    num_classes: int = 94
 
     # Initial slot confidence logit (sigmoid(-2) ≈ 0.12 → "empty")
     conf_logit_init: float = -4.0
@@ -125,15 +156,33 @@ class EFEConfig:
     fov_deg: float = 90.0
     max_view_dist: float = 6.0  # metres
 
+    # Frontier exploration: penalise candidates whose final position is too
+    # close to already-visited positions (drives the agent toward novel areas).
+    w_frontier_penalty: float = 1.5   # penalty weight
+    frontier_radius: float = 1.0      # metres — "already explored" radius
+
+    # Stage 2 — Wall-awareness and doorway routing
+    # Wall repulsion: penalise sequences whose path crosses near a wall slot.
+    w_wall_penalty:   float = 5.0     # EFE penalty weight
+    wall_margin_m:    float = 0.8     # Gaussian sigma for wall influence (metres)
+    # Doorway routing: redirect goal through a doorway slot when wall blocks path.
+    # Set enable_door_routing=False to use navmesh waypoints only (no VIA-DOOR).
+    enable_door_routing: bool = False  # disabled — navmesh waypoints already route correctly
+    door_block_margin_m:    float = 0.70  # wall within this dist of path-to-goal = blocked
+    door_pass_radius_m:     float = 1.20  # dist to doorway slot counts as "passed through"
+    door_routing_min_dist_m: float = 2.50 # don't activate VIA-DOOR when this close to goal
+    door_max_routing_steps: int   = 20    # give up VIA-DOOR if stuck for this many steps
+
 
 @dataclass
 class ModelV6Config:
-    perception: PerceptionConfig = field(default_factory=PerceptionConfig)
-    slots: SlotConfig = field(default_factory=SlotConfig)
-    pose: PoseConfig = field(default_factory=PoseConfig)
-    assoc: AssociationConfig = field(default_factory=AssociationConfig)
-    gru: GRUConfig = field(default_factory=GRUConfig)
-    efe: EFEConfig = field(default_factory=EFEConfig)
+    perception:  PerceptionConfig  = field(default_factory=PerceptionConfig)
+    slots:       SlotConfig        = field(default_factory=SlotConfig)
+    pose:        PoseConfig        = field(default_factory=PoseConfig)
+    assoc:       AssociationConfig = field(default_factory=AssociationConfig)
+    gru:         GRUConfig         = field(default_factory=GRUConfig)
+    efe:         EFEConfig         = field(default_factory=EFEConfig)
+    structural:  StructuralConfig  = field(default_factory=StructuralConfig)
 
     # VFE loss weights (used when training the GRU context network)
     w_recon_pos: float = 1.0
